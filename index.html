@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sound and Voice Control</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      text-align: center; 
+      margin: 50px; 
+      background-color: black; 
+      color: white;
+    }
+    .container { 
+      max-width: 600px; 
+      margin: auto; 
+    }
+    .controls { 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      gap: 10px; 
+      margin-top: 10px; 
+    }
+    #wordDisplay { 
+      font-size: 3em; 
+      font-weight: bold; 
+      margin-top: 20px; 
+      min-height: 1.2em; 
+    }
+    select, button { 
+      padding: 5px 10px;
+      font-size: 1em;
+    }
+    a.button {
+      padding: 5px 10px;
+      background-color: #444;
+      color: white;
+      text-decoration: none;
+      border: none;
+      border-radius: 3px;
+      font-size: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls">
+      <select id="soundSelect" onchange="changeSound()">
+        <option value="" selected>Select</option>
+<option value="ai">ai</option>
+<option value="ar">ar</option>
+<option value="aw">aw</option>
+<option value="ay">ay</option>
+<option value="ch">ch</option>
+<option value="ea">ea</option>
+<option value="ee">ee</option>
+<option value="ei">ei</option>
+<option value="er">er</option>
+<option value="ew">ew</option>
+<option value="iu">iu</option>
+<option value="ng">ng</option>
+<option value="oi">oi</option>
+<option value="oo">oo</option>
+<option value="ou">ou</option>
+<option value="ow">ow</option>
+<option value="oy">oy</option>
+<option value="sh">sh</option>
+<option value="th">th</option>
+<option value="ur">ur</option>
+      </select>
+      <button onclick="playWords()">Play</button>
+      <button onclick="pauseWords()">Pause</button>
+      <a href="words.txt" target="_blank" class="button">Words</a>
+    </div>
+    <div id="wordDisplay"></div>
+  </div>
+  <script>
+    // soundWords maps each sound combination to a comma-separated list of words.
+    let soundWords = {'oo': 'soothing, soot, uproot, coo, hoot, bloodshed, offshoot, outlook, crook, gobbledygook, troop, hullabaloo, aloof, snooty, choose, kooky, pooch, boon, playbook, goo, hoodwink, booty, brooch, oolong, coolie, tooth, selfhood, bamboozle, shoo, anteroom, brooder, doom, floodplain, nincompoop,, cuckoo, bootblack, oodles, hoof, noonday, droop, taproom, falsehood, crookedly, off the hook, sportsbook, bootlegger, moot, statehood, brooding, boogeyman, lifeblood, broom, oomph, ooze, octoroon, woo, doofus, croon, ballyhoo, noose, coop', 'ch': 'eschew, chauvinism, stench, vouch, chore, check, chummy, roach, blotch, beech, encroach, filch, clutch, chauffeur, crutch, chamber, brainchild, anachronistic, charcoal, broach, stretch, pitch, haunch, discharge, schism, chastity, squelch, avalanche, reach, deck chair, perch, putsch, lecher, chomp, chimera, besmirch, technocratic, chaperone, chemtrail, chink, perchance, impeach, chambermaid, satchel, tchotchke, pastiche, ditchwater, starch, retrench, penchant, parched, chipper, tongue-in-cheek, choose, technophobe, munch, entrench, pooch, rechristen, fetch, riches, attaché, march, cheerio, hatchet, brooch, luncheon, kitsch, debauchery, drench, churn, aching, chronicle, staunchly, melancholia, chase, chippy, charter, franchisee, chauvinistic, chattel, breach, clincher, chakra, chivalrous, changeover, choppy, dispatch, charade, chalice, charred, watchful, orchard, botched, inch, choke point, linchpin, bleach, chant, nonchalantly, trenchant, spirochete, hunch, treacherous, melancholy, ocher, chalky, nonchalance, lecherous, detached, anachronism, démarche, archrival, crouch, snatch, cherub, cachet, chafe, chastise, reproach, crotch, chivvy, chap, ditch, staunch, ostrich, cheap, echelon, twitchy, chandelier, anchor, chatterbox, scorch, poach, lurch, hatchery, scorched, chiseled, chives, nonchalant, screech, chieftain, watchword, schnapps, birch, hunchbacked, hitchhike, breeches, chary', 'sh': 'slavish, sash, vanquish, replenish, fellowship, rash, shingle, nosh, shrewd, faddish, onrush, unabashedly, bloodshed, offshoot, disheartening, shrewdly, ricksha, dashing, aftershock, shell, relish, hawkish, enshrine, shrub, ravish, threshold, swashbuckling, shudder, prudish, shroud, priggish, faddishness, waspish, relinquish, owlish, unleash, burnish, mishmash, shah, shun, shrill, shore up, hardship, sheath, hush, slapdash, shoo, sheer, sham, shack, shunt, shag, shvitz, courtship, stash, puckish, ticklish,, bearish, shoehorn, marshal, ghoulish, sharply, ravishing, brutish, malnourished, meshwork, shift, whitewash, shortcoming, usher, quash, embellish, mishap, shelter, perishable, leash, squeamish, kibosh, shoulder, kinship, impish, shoestring, tarnish, one-upmanship, makeshift, skirmish, famished, varnish, bashful, ramshackle, shard, mesh, laddish, sharp, bullish, peevishly, blemish, sluggish, backlash, shrivel, Sherpa, dishevel, outshine, shimmer, washbasin, marksmanship, awash, flashpoint, shenanigans, shibboleth, shredded, gushing, shush, enmesh, shambles, shackle, abashed, clamshell, coquettish, marsh, mushy, clash, shove, gnash, whiplash, shriek', 'th': 'otherworldly, cathartic, oath, groupthink, lithesome, healthily, soothing, dearth, hitherto, thoroughly, lathe, goliath beetle, thawing, writhe, misanthrope, authoritative, fathom, orthographic, aftermath, hither, thump, gather, thrill, thimble, thorn, untether, thudding, thud, blather, smithereens, threshold, throb, thoroughfare, bolthole, earthmover, breadth, umpteenth, thaw, blithely, swath, unscathed, sleuth, thither, throes, blacksmith, tooth, sheath, girth, henceforth, ethos, lithe, catharsis, thigh, brothel, zenith, thoroughness, gathering, scythe, thrift, froth, theorize, thrifty, faith, withering, thrust, brethren, withal, euthanasia, thorough, pithy, earthenware, mirth, anathema, off the hook, enthrall, therein, lithograph, uncouth, lethargically, lethargic, unearth, euthanize, lethargy, scathing, broth, threatener, frothy, loath, slither, cutthroat, plaything, thine, loathe, berth, throng, thicket, thwart, bellwether, shibboleth, filth, wrath, lighthearted, thenceforward, tithe, firsthand', 'ea': 'dead letter box, healthily, dearth, whereat, outbreak, spearhead, weary, whereabouts, warmhearted, heap, reach, plateau, demean, steadfast, yeasty, disheartening, piecemeal, bleak, lead-up, appease, fountainhead, yearning, impeach, seared, panacea, warhead, preamble, cream, earnestly, glean, seamstress, weave, heave, unseal, earlobe, rear, repeal, bugbear, malleable, tread, sleaze, endeavor, earthmover, breadth, dean, loggerhead, heady, beauteous, unleash, eavesdrop, flea, zealot, heaping, abreast, endearing, breadbasket, pipsqueak,, meager, beanie, sheath, wean, entreaty, plead, caveat, malleability, nearsightedness, ease, widespread, breach, leapfrog, eatery, gleam, seated, appeasement, bearish, deaden, manteau, endeavour, deadpan, vengeance, weariness, ream, meander, daybreak, plea, bleach, dreary, sweatpants, earthenware, wearily, bedstead, deal, treacherous, greatcoat, leash, squeamish, zeal, open-hearted, talebearer, steadfastly, rehearse, lineage, fearmongering, overhead, leaden, weal, earmark, unearth, drear, zealously, threatener, cheap, interweave, meadow, bridgehead, seamless, bedspread, beatific, ordeal, malfeasance, reap, bearskin, clearinghouse, hearken, unsealed, wreak, dread, beleaguered, lighthearted, spear, treaty, headlong, beak, steady, endear, earnestness', 'ou': 'founder, vouch, ghoul, pernicious, groupthink, forecourt, frivolous, pretentious, insouciance, redouble, uproarious, mounting, mournful, outbreak, lounge, compound, outpace, thoroughly, outgun, inconspicuously, overwrought,, outstrip, backcountry, whereabouts, ouster, counterproposal, detour, candour, stout, afoul, covetousness, outlook, boundless, impecunious, stupendous, arduous, callousness, meritorious, mounted, slough, fountainhead, bourgeois, outbound, rout, outwit, outlier, pompous, parlous, spout, ostentatious, scrounge, decorously, righteousness, bouncer, eponymous, oust, surreptitious, mountainous, thoroughfare, gratuitously, accoutrement, voluptuous, shroud, lout, injurious, astounding, perilous, seditious, luscious, ardour, felicitous, heinous, nebulous, industriousness, pounce, sou, assiduously, counterintuitive, vertiginous, beauteous, brouhaha, ravenously, douse, surreptitiously, louse, impervious, overwrought, conscientiously, magnanimous, obsequiousness, pugnacious, nefarious, erogenous, mendacious, rendezvous, ominous, wrought, outwardly, henhouse, outcry, flirtatious, frivolous,, thoroughness, courtship, Bourbon, gregarious, candour,, intercourse, counterinsurgency, dexterous, chivalrous, countenance, wounded, bailout, outsize, bourgeoisie, boundary, endeavour, ghoulish, counteract, downpour, redound, malnourished, impound, tumultuous, ponderous, flounder, furloughed, confound, erroneously, ludicrous, bough, thorough, disingenuous, troubled, sonorous, tortuous, ploughland, conspicuously, self-righteousness, amorphous, ravenous, treacherous, indecorous, foursome, obsequious, trough, boisterous, roughhouse, boudoir, shoulder, conscientious, timorous, lecherous, pound, flout, spurious, dumbfound, espouse, uncouth, conspicuous, multifarious, mound, crouch, sanctimonious, rambunctious, tout, mourning, pious, hound, zealously, languorous, boulder, croupier, wondrous, bountiful, mourner, scoundrel, decouple, wraparound, prodigious, outshine, promiscuous, strenuous, ominously, ubiquitous, toughness, countertop, contentious, serendipitous, clearinghouse, ignominious, magnanimously, expound, bumptiousness, vicariously, resounding, preposterous, insidious, outskirts, inbound, lousy, sprout, foul, egregious, precocious', 'ow': 'highbrow, uptown, overblown, downtrodden, harrow, fellowship, scarecrow, dowry,, sorrowful, downright, empower, dhow, owing, prowess, crackdown, anyhow, frown, bellow, windowsill, drawdown, billowing, callow, willow, tow, kowtow, owlish, crowd, sorrow, sparrow, unbeknown, tallow, howl, frowzy, scowl, downpour, rowdy, drowsy, vow, marrow, renowned, stow, avowal, bestow, howling, crowbar, avow, meadow, avowed, cowardice, prowl, gallows, sallow, dowry, rower, growl, bungalow, snowpack, cow', 'ee': 'meekly, eerily, reeve, beech, pedigreed, preeminent, fleet, goliath beetle, oversee, gatekeeper, seer, wheezing, teetotaler, glee, commandeer, discreet, reel, smithereens, creek, tongue-in-cheek, melee, appointee, exceedingly, peerlessness, gleefully, gleeful, peerless, teem, discreetly, heed, feeble, cheerio, umpteenth, deem, careen, wheelman, misdeed, negligee, peek, jeer, seem, tweed, queer, interviewee, heedless, seep, sheer, franchisee, greensward, greed, congee, marquee, twee, sneer, keep tabs on, wee, leer, peerage, esteemed, beet, beeline, sleet, deed, greenery, reef, reed, steep, seedy, veer, leeway, reek, enfeeble, heel, wheedle, leery, tumbleweed, peevishly, steer, feelie, legatee,, bargee, jubilee, screech, detainee, tureen, teeter, deepen, peeved, breeches, keepsake', 'ai': 'mainspring, liaison, hail, quaint, bobtail, formulaic, bewail, brainchild, reconnaissance, lair, deck chair, procaine, faint, chemtrail, fountainhead, strait, chambermaid, cairn, scatterbrained, ungainly, raiment, mountainous, taint, airborne, braiding, prosaic, acquaint, attain, acclaim, ailurophile, capercaillie, liaise, demimondaine, braise, faintly, traipse, plaintive, floodplain, strain, bailout, ailing, campaigner, avail, scatterbrain, faith, light rail, gait, dainty, tailback, prevail, maiden, traitor, staid, maim, constraint, despair, frail, frailty, freight train, debonair, ail, mainstay, constrain, plait, hobnail, stain, rainfall, wailing, malaise, refrain, disdain, railroad, chieftain, curtail, detainee, brain drain, wainscoting, waiver, portraiture, flail', 'oi': 'loiter, despoiler, roil, wrongdoing, bourgeois, soil, tortoise, poignancy, appointee, abattoir, toil, anointed, vantage point, turmoil, devoid, bourgeoisie, patois, poignant, joint, moisture, choke point, hoi polloi, boisterous, boudoir, foist, poised, adroitly, memoirist, rejoice, repertoire, flashpoint, connoisseur, foil', 'ay': 'astray, affray, allay, sway, dismay, parlay, playbook, mayhem, bayonet, haystack, naysayer, waterway, interplay, gangway, noonday, hay, flay, daybreak, haywire, playpen, leeway, quayside, foray, runaway, wayward, mainstay, plaything, lay-by', 'oy': 'buoy, viceroy, coyly, unalloyed, voyeuristic, joyride, voyeuristically, voyage, corduroy', 'ng': 'vengeful, mainspring, tangle, whacking, regarding, startlingly, daunting, mounting, grappling, grueling, trawling, sprawling, soothing, Anglophilia, lounge, untangle, harangue, gingham, tinge, beguiling, seizing, scaffolding, arrange, shingle, unyielding, thawing, prompting, imploringly, bewildering, mango, scolding, plangent, gruelling, frosting, peddling, sling, hinge, avenger, owing, twinkling, overwhelming, appallingly, sighting, wheezing, disheartening, wrongdoing, infighting, fringe, entanglement, inkling, meddling, dazzling, engender, dashing, consolingly, sanguine, yearning, lingerie, contingent, bungler, disparaging, estranged, skirting, ungainly, thudding, slanting, gnawing, scrounge, clang, congregant, tongue-in-cheek, swashbuckling, enduring, exceedingly, hamstring, billowing, baffling, coruscating, wrangle, braiding, unwitting, astounding, whinge, frangible, staggering, blaring, crusading, grumbling, mewling, doppelganger, grudging, stumbling, babbling, infringement, stinging, riveting, fluttering, hoarding, palpitating, heaping, singe, scavenge, flattering, endearing, oolong, fledgling, stocking, hireling, aching, dying, spring, ingratiating, ruling, rung, scapegoating, discerning, doting, excruciating, bungle, expunge, tantalizing, intermingle, pulsating, condescending, gathering, congee, dwelling, ailing, dingy, sparingly, disquieting, ringer, changeover, gangway, wrangling, withering, vengeance, cling, ravishing, arrangement, dispiriting, strangle, revoltingly, cunningly, gringo, rambling, smattering, appalling, linger, grating, whopping, startling, angst, underling, tramping, curling, disingenuous, upbringing, handling, sobbing, shortcoming, mumbling, engulf, gong, tellingly, impending, bubbling, maddeningly, trifling, posturing, dwindling, engrossed, invigorating, upswing, zoning, long, niggling, ensuing, lumbering, protruding, fearmongering, fiddling, shoestring, twinge, infringe, bragging, reckoning, mourning, galling, slighting, howling, unnerving, pang, unswerving, languor, dangle, urging, cunning, brooding, begrudgingly, languorous, scathing, siding, tidings, arresting, piddling, mingle, accompanying, plaything, rebuking, agonizing, blistering, lodging, burgeoning, grudgingly, forebodingly, wrong, throng, piercingly, sweltering, gingerly, glamping, foreboding, harbinger, clearinghouse, rejuvenating, wailing, longing, conflicting, gushing, unhinged, avenge, resounding, icing, daring, headlong, wainscoting, hulking, deriding, compelling, disbelieving, oblong, lingering, bungalow, vanguard, terrifying', 'ar': 'cathartic, baccarat, regarding, martinet, startlingly, gnarled, uproarious, stardust, ensnare, dearth, spearhead, caret, artful, harangue, harrow, tarmac, stockyard, caress, barter, arrange, arcane, safeguard, charcoal, proletariat, discharge, weary, hoarse, scarecrow, wariness, warmhearted, pare, coarse, egalitarian, artifice, paragon, parapet, disheartening, barn, starry, arduous, hazard, remark, variance, janissary, dastardly, emissary, gendarmerie, yearning, snarl, seared, cellar, warhead, disparaging, barfly, parlous, garbled, earnestly, starch, worrywart, hoard, parched, paraphernalia, parsley, thoroughfare, soar, warrantless, proletarian, arc, parlor, dignitary, earlobe, parlay, rear, hallmark, bugbear, startled, argot, earthmover, blaring, ardour, harness, march, carrion, scar, farcical, haphazard, careen, hoarding, mortuary, gnarly, pariah, barrel, parados, hussar, adversarial, endearing, bulwark, harbor, farewell, hardship, steward, armload, wary, arbiter, nefarious, backwards-compatible, hindquarters, quandary, hilarity, startle, ardent, ajar, charter, outwardly, lukewarm, award, innards, pockmarked, catharsis, nearsightedness, sparrow, greensward, gregarious, snare, stark, adversary, marquee, camaraderie, sparingly, incarnadine, bearish, snarky, titular, Warren, charade, boundary, flare, arsonist, marginalization, marshal, gargle, ward, charred, sharply, unparalleled, smarten, vernacular, arrangement, orchard, weariness, lawfare, startling, sectarian, miscarriage, dreary, postpartum, barb, earthenware, wearily, glare, stardom, insurrectionary, warily, marrow, laggard, compartmentalize, apiary, open-hearted, avarice, disparage, inward, lumberyard, talebearer, larceny, martyr, barley, corollary, gargantuan, bargepole, squarely, démarche, archrival, upstart, spar, multifarious, rehearse, fearmongering, lethargically, tarnish, nark, sardonic, crowbar, varnish, lethargic, garb, wayward, upwardly mobile, shard, earmark, baseboard, blare, secular, unearth, barmy, incendiary, drear, tarpaulin, lethargy, sharp, warble, mar, barred, arresting, capillary, afterwards, harried, bark, hoarsely, farce, equity market, columbarium, wraparound, farmhand, garrison, tartness, spark, cowardice, cataract, inwardly, actuary, marksmanship, tributary, parse, parley, bearskin, aware, harbinger, clearinghouse, hearken, quarry, thwart, bargee, disregard, barrage, warrant, vicariously, bar, plenipotentiary, lighthearted, drunkard, spear, awareness, daring, fare, marsh, paroxysm, barge, thenceforward, apparition, largesse, endear, tartly, chary, earnestness, haggard, warp, vanguard, harassment, partake', 'er': 'covert, otherworldly, disperse, founder, deteriorate, swagger, peppermint, flabbergasted, aversion, falter, pernicious, blustery, eerily, dead letter box, sierra, colander, cauterize, experiential, fraudster, overblown, ulterior, lodger, deferential, loiter, undertone, somersault, hitherto, whereat, desert, excerpt, adviser, hinder, tickler, verve, perpetually, erudite, peruse, adhere, scullery, despoiler, converge, firecracker, chamber, fervid, overwrought,, barter, overdue, gerontocracy, posterity, belligerent, riveter, materiel, bewildering, whereabouts, collateral, astronomer, specter, ouster, counterproposal, berate, kerfuffle, incinerator, oversee, gatekeeper, empower, perch, avenger, overwhelming, erode, lecher, seer, teetotaler, chimera, interim, internment, wherefore, rafter, discernment, serfdom, commandeer, aftermath, reiterate, obliterate, meritorious, certitude, miser, hither, pamper, aero, engender, slander, chaperone, comforter, overture, heretic, gendarmerie, battery, gather, assert, viceroy, supersede, aftershock, perchance, utterly, lingerie, outlier, bungler, chambermaid, badger, ditchwater, dereliction, scatterbrained, canker, bewilderment, irreverence, verbatim, blister, broker, untether, inference, punter, sermon, juggernaut, blather, smithereens, intersectionality, pertinent, paraphernalia, fetter, chipper, bouncer, matter, puerile, serum, splatter, paternalistic, pergola, ragpicker, shudder, belligerence, underfed, discern, peripatetic, lackluster, embittered, heron, exertion, sliver, udder, culvert, plunder, peerlessness, reveler, crusader, trotter, hermitage, visceral, flivver, proliferate, perambulation, perdition, fierce, err, peerless, staggering, intermittent, earthmover, ephemera, perilous, comptroller, flutter, clerk, clinker, pauperize, whisker, snigger, literati, imperil, doppelganger, caper, flabbergast, cheerio, counterintuitive, loggerhead, vertiginous, utterance, quiver, fluttering, imperturbable, limerick, reckoner, serendipity, patisserie, media literacy, squander, derive, adversarial, pervasive, reverent, impervious, conifer, thither, glittery, overwrought, flattering, reverberation, capercaillie, jeer, perfunctory, brokerage, coverall, debauchery, queer, overtly, meager, miter, interviewee, moniker, arbiter, subvert, miller, pucker, brawler, unilaterally, yammer, hindquarters, temper, beret, waver, subservience, erogenous, assertion, supper, discerning, naysayer, anteroom, brooder, charter, sheer, fritter, gibber, overburden, esoteric, undercut, consternation, dossier, perceptive, intermingle, internecine, unfettered, sternness, mackerel, hawser, gathering, clincher, intercourse, perspire, counterinsurgency, adversary, dexterous, fester, eatery, banter, camaraderie, waterway, herd, sneer, bereft, deterrence, erstwhile, ringer, glimmer, campaigner, changeover, interplay, overstep, pervasiveness, scatterbrain, mobster, inveterate, leer, inadvertently, batter, inherently, counteract, asunder, peerage, hunker, convert, vernacular, withering, revere, cyber, smolder, sovereign, uterus, foster, subversive, dweller, conversationalist, meander, criterion, drudgery, ponderous, wafer, smattering, flounder, dryer, equerry, demerger, linger, erroneously, render, confer, neuter, inter, derelict, greenery, underling, heritage, stammer, ersatz, ephemerality, ledger, coerce, fifer, persevere, lumber, fervor, veritable, quaver, vermin, dagger, blunderbuss, interregnum, terse, usher, alert, exacerbate, ermine, critter, shelter, treacherous, mercurial, aberrant, veer, perishable, cobbler, superstition, ocher, feral, lawmaker, skulduggery, boisterous, exert, hermit, lumberyard, muster, talebearer, interdiction, proliferation, bootlegger, shoulder, lecherous, minder, saunter, erosion, therein, kilter, splinter, reverently, lumbering, imperturbably, deference, bicker, scattered, pauper, wager, lender, misnomer, ponder, fearmongering, overhead, quicksilver, cumbersome, cherub, unnerving, unswerving, overturn, interloper, tatters, subterfuge, reverie, swindler, clerical, whereupon, fervently, peril, turmeric, jerrycan, leery, imperative, hawker, boulder, scupper, sui generis, unnerve, croupier, threatener, infomercial, dexterity, tiered, discernible, sputter, slither, dapper, burgher, otter, commoner, pilferage, damper, Sherpa, afterwards, interweave, mourner, chandelier, overt, innermost, deter, steer, chatterbox, fervent, stern, scatter, incinerate, blistering, shimmer, hatchery, menagerie, heresy, prerogative, blubber, errand, scuba diver, reverential, veracity, deterrent, pester, berth, makeover, decipher, slivered, piercingly, countertop, reverence, sweltering, nerve, gingerly, deliberation, serendipitous, harbinger, repertoire, overhaul, bellwether, peremptorily, maverick, herald, welter, avert, cajolery, swerve, rower, beleaguered, preposterous, derogatory, stutter, peppercorn, hover, eradicate, underdog, deriding, waiver, teeter, tenderize, forgery, peremptory, perfunctorily, coercion, lingering, whereby, freighter, terrifying, leper, bolster, cipher', 'ur': 'tenured, seizure, incur, forecourt, nurture, purveyor, hurtful, mournful, furtive, inure, chauffeur, fracture, conjure, detour, candour, unfurl, spurred, usury, spur, overture, prurient, bourgeois, turf, purge, turnip, taciturn, enduring, surreptitious, injurious, suburbia, turd, burr, ardour, ailurophile, imperturbable, purportedly, hurdle, burnish, flurry, tenure, surreptitiously, urbane, cursorily, turncoat, burin, sinecure, churn, duress, auteur, accursed, manure, overburden, curd, turmoil, courtship, Bourbon, candour,, intercourse, acupuncturist, obdurate, counterinsurgency, burly, purview, prefiguration, curfew, murky, nocturnal, bourgeoisie, burgeon, endeavour, hurtle, downpour, malnourished, moisture, furtively, furloughed, accursed,, embrasure, rupture, curling, lure, disbursement, rapporteur, ursine, usurp, mercurial, spurn, foursome, insurrectionary, disclosure, urn, curb, posturing, surmise, scurry, conurbation, spurious, purty, imperturbably, repurpose, insurgency, bifurcate, curtly, burst, mourning, overturn, urging, allure, turmeric, demur, burden, burgher, mourner, liturgical, ordure, splurge, lurch, voyeuristic, pursuant, endure, burgeoning, commensurate, reimburse, expenditure, curmudgeonly, turpitude, hurl, incursion, connoisseur, resurrect, curtail, forfeiture, conjecture, tureen, sure-fire, auburn, voyeuristically, rapture, surge, portraiture, corduroy', 'aw': 'drawl, dawdle, trawling, sprawling, flaw, thawing, straw, hawkish, tawny, squaw, maw, gnawing, drawdown, dawdle,, crawl, yawn, caw, thaw, gnaw, claw, brawler, awry, fawn, award, hawser, lawlessness, brawn, tawdry, scrawl, flawed, lawfare, lawmaker, bawl, runaway, sprawl, hawker, guffaw, gewgaw, awash, aware, awe, awareness', 'ew': 'eschew, bewail, bewildering, shrewd, brew, shrewdly, mildew, askew, bewilderment, newsstand, strew, newsprint, mewling, pew, hew, farewell, steward, interviewee, lukewarm, purview, curfew, newly-wed, spew, whitewash, lewd, leeway, screw, tumbleweed, gewgaw, screwy', 'iu': 'opprobrium, encomium, presidium, compendium, triumvirate, columbarium', 'ei': 'seizure, deceive, seizing, hundredweight, inconceivable, sleigh, reiterate, reinvigorate, heinous, reignite, deign, inveigh, ableist, sovereign, seize, rein, conceited, forfeit, therein, deity, freight train, deceit, reimburse, forfeiture, cuneiform, unveil, freighter'};
+    // Reset default values on page load.
+    document.getElementById("soundSelect").value = "";
+    let defaultWords = "";
+    let wordArray = defaultWords.split(/,\s*/);
+    let currentIndex = 0;
+    let isPaused = false;
+    let currentUtterance = null;
+    
+    function changeSound() {
+      let selectedSound = document.getElementById("soundSelect").value;
+      defaultWords = soundWords[selectedSound] || "";
+      wordArray = defaultWords.split(/,\s*/);
+      currentIndex = 0;
+      document.getElementById("wordDisplay").innerHTML = "";
+    }
+    
+    // Highlights the selected sound combination using the color #ED6C59.
+    function highlightSound(word) {
+      let selectedSound = document.getElementById("soundSelect").value;
+      if (!selectedSound) return word;
+      let re = new RegExp("(" + selectedSound + ")", "gi");
+      return word.replace(re, "<span style='color: #ED6C59;'>$1</span>");
+    }
+    
+    function playWords() {
+      isPaused = false;
+      currentIndex = 0;
+      if (!defaultWords || defaultWords.trim() === "") return;
+      playNextWord();
+    }
+    
+    function playNextWord() {
+      if (currentIndex >= wordArray.length) {
+        document.getElementById("wordDisplay").innerHTML = ""; 
+        return;
+      }
+      let currentWord = wordArray[currentIndex];
+      document.getElementById("wordDisplay").innerHTML = highlightSound(currentWord);
+      
+      currentUtterance = new SpeechSynthesisUtterance(currentWord);
+      currentUtterance.onend = function() {
+        if (!isPaused) {
+          currentIndex++;
+          playNextWord();
+        }
+      };
+      speechSynthesis.speak(currentUtterance);
+    }
+    
+    function pauseWords() {
+      isPaused = true;
+      speechSynthesis.cancel();
+    }
+    
+    window.onload = function() {
+      document.getElementById("soundSelect").value = "";
+      document.getElementById("wordDisplay").innerHTML = "";
+    }
+  </script>
+</body>
+</html>
