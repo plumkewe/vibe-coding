@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="EN-GB">
+<html lang="it">
 <head>
   <meta charset="UTF-8">
   <title>Deluge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     :root {
       --bg-color: #000;
@@ -121,7 +122,7 @@
     }
 
     .badge.source {
-      background-color: #999;
+      background-color: #888;
       color: #000;
       border-color: #aaa;
     }
@@ -150,6 +151,50 @@
       height: 18px;
       fill: currentColor;
     }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+      #controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      input, button, .icon-button {
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .card-content h3 {
+        font-size: 16px;
+      }
+
+      .card-content p {
+        font-size: 13px;
+      }
+
+      input, button, .icon-button {
+        font-size: 14px;
+        padding: 8px;
+        height: 38px;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 3px 5px;
+      }
+
+      .icon {
+        width: 16px;
+        height: 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -174,7 +219,6 @@
   <script>
     let data = [];
     let filtered = [];
-    let sortOrder = "desc";
 
     document.getElementById('csvFile').addEventListener('change', function (e) {
       const file = e.target.files[0];
@@ -184,7 +228,7 @@
         complete: function(results) {
           data = results.data.filter(row => row.title && row.url);
           filtered = [...data];
-          sortAndRender();
+          renderCards(filtered);
         }
       });
     });
@@ -207,21 +251,14 @@
         return matchesText && matchesDate;
       });
 
-      sortAndRender();
-    }
-
-    function sortAndRender() {
-      filtered.sort((a, b) => {
-        const dateA = new Date(a.created);
-        const dateB = new Date(b.created);
-        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-      });
       renderCards(filtered);
     }
 
     function renderCards(dataset) {
       const container = document.getElementById('cardsContainer');
       container.innerHTML = '';
+
+      dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
 
       dataset.forEach(item => {
         const card = document.createElement('a');
