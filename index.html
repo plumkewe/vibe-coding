@@ -52,6 +52,12 @@
     #date-range {
       display: flex;
       gap: 10px;
+      width: auto;
+    }
+
+    #date-range input {
+      width: auto;
+      min-width: 120px;
     }
 
     #cardsContainer {
@@ -136,7 +142,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 10px 14px; /* più padding per testo */
+      padding: 10px 14px;
       font-size: 16px;
       background: #222;
       color: var(--text-color);
@@ -144,8 +150,8 @@
       border-radius: 4px;
       gap: 6px;
       height: 42px;
-      width: auto; /* larghezza automatica */
-      min-width: 42px; /* minimo come bottone senza testo */
+      width: auto;
+      min-width: 42px;
       box-sizing: border-box;
       cursor: pointer;
       user-select: none;
@@ -189,8 +195,12 @@
       }
 
       #date-range {
-        flex-direction: row;
         width: 100%;
+      }
+
+      #date-range input {
+        flex: 1 1 50%;
+        min-width: 0;
       }
 
       .card {
