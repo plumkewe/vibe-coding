@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Deluge</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root {
       --bg-color: #000;
@@ -21,17 +21,17 @@
       padding: 20px;
     }
 
-    input, button {
+    input,
+    button {
       background: #222;
       color: var(--text-color);
       border: 1px solid var(--border-color);
       padding: 10px;
-      margin: 10px 5px;
       font-size: 16px;
       border-radius: 4px;
       outline: none;
-      height: 42px;
       box-sizing: border-box;
+      height: 42px;
     }
 
     button:hover {
@@ -47,6 +47,11 @@
       align-items: center;
       gap: 10px;
       margin-bottom: 20px;
+    }
+
+    #date-range {
+      display: flex;
+      gap: 10px;
     }
 
     #cardsContainer {
@@ -69,7 +74,7 @@
 
     .card:hover {
       transform: translateY(-4px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.6);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
     }
 
     .card .image-container {
@@ -100,7 +105,7 @@
     .card-content h3 {
       margin: 0;
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 700;
       color: #fff;
     }
 
@@ -131,7 +136,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+      padding: 10px 14px; /* più padding per testo */
       font-size: 16px;
       background: #222;
       color: var(--text-color);
@@ -139,6 +144,11 @@
       border-radius: 4px;
       gap: 6px;
       height: 42px;
+      width: auto; /* larghezza automatica */
+      min-width: 42px; /* minimo come bottone senza testo */
+      box-sizing: border-box;
+      cursor: pointer;
+      user-select: none;
     }
 
     .icon-button:hover {
@@ -152,21 +162,39 @@
       fill: currentColor;
     }
 
-    /* Responsive styles */
+    #notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #222;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      display: none;
+      z-index: 1000;
+      border: 1px solid #444;
+    }
+
     @media (max-width: 768px) {
       #controls {
         flex-direction: column;
         align-items: stretch;
       }
 
-      input, button, .icon-button {
+      input,
+      button,
+      .icon-button {
         width: 100%;
-        max-width: 100%;
+      }
+
+      #date-range {
+        flex-direction: row;
+        width: 100%;
       }
 
       .card {
         width: 100%;
-        max-width: 100%;
       }
     }
 
@@ -179,7 +207,9 @@
         font-size: 13px;
       }
 
-      input, button, .icon-button {
+      input,
+      button,
+      .icon-button {
         font-size: 14px;
         padding: 8px;
         height: 38px;
@@ -198,56 +228,85 @@
   </style>
 </head>
 <body>
-
   <div id="controls">
-    <input type="file" id="csvFile" accept=".csv">
-    <input type="text" id="searchInput" placeholder="Search...">
-    <input type="date" id="startDate" title="From date">
-    <input type="date" id="endDate" title="To date">
+    <input type="file" id="csvFile" accept=".csv" />
+    <input type="text" id="searchInput" placeholder="Search..." />
+    <div id="date-range">
+      <input type="date" id="startDate" title="From date" />
+      <input type="date" id="endDate" title="To date" />
+    </div>
     <button onclick="applyDateFilter()">Go</button>
-    <button class="icon-button" onclick="exportResults()" id="exportBtn" title="Export results">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
+    <button class="icon-button" onclick="exportResults()" title="Export results">
+      <svg class="icon" viewBox="0 0 24 24"
+        ><path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z" />
       </svg>
       <span id="exportCount">0</span>
+    </button>
+    <button class="icon-button" onclick="clearCache()" title="Clear saved data">
+      <svg class="icon" viewBox="0 0 24 24"
+        ><path
+          d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z"
+        />
+      </svg>
     </button>
   </div>
 
   <div id="cardsContainer"></div>
+  <div id="notification"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script>
     let data = [];
     let filtered = [];
 
-    document.getElementById('csvFile').addEventListener('change', function (e) {
+    function showNotification(message) {
+      const note = document.getElementById("notification");
+      note.textContent = message;
+      note.style.display = "block";
+      setTimeout(() => {
+        note.style.display = "none";
+      }, 3000);
+    }
+
+    window.addEventListener("load", () => {
+      const saved = localStorage.getItem("savedCSV");
+      if (saved) {
+        data = JSON.parse(saved);
+        filtered = [...data];
+        renderCards(filtered);
+        showNotification("Dati caricati dal browser.");
+      }
+    });
+
+    document.getElementById("csvFile").addEventListener("change", function (e) {
       const file = e.target.files[0];
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: function(results) {
-          data = results.data.filter(row => row.title && row.url);
+        complete: function (results) {
+          data = results.data.filter((row) => row.title && row.url);
+          localStorage.setItem("savedCSV", JSON.stringify(data));
           filtered = [...data];
           renderCards(filtered);
-        }
+          showNotification("CSV caricato e salvato nel browser.");
+        },
       });
     });
 
     function applyDateFilter() {
-      const start = new Date(document.getElementById('startDate').value);
-      const end = new Date(document.getElementById('endDate').value);
-      const query = document.getElementById('searchInput').value.toLowerCase();
+      const start = new Date(document.getElementById("startDate").value);
+      const end = new Date(document.getElementById("endDate").value);
+      const query = document.getElementById("searchInput").value.toLowerCase();
 
-      filtered = data.filter(item => {
+      filtered = data.filter((item) => {
         const createdDate = new Date(item.created);
         const matchesText =
-          (!query || (item.title && item.title.toLowerCase().includes(query)) ||
-           (item.excerpt && item.excerpt.toLowerCase().includes(query)));
-
+          !query ||
+          (item.title && item.title.toLowerCase().includes(query)) ||
+          (item.excerpt && item.excerpt.toLowerCase().includes(query));
         const matchesDate =
           (!isNaN(start) ? createdDate >= start : true) &&
           (!isNaN(end) ? createdDate <= end : true);
-
         return matchesText && matchesDate;
       });
 
@@ -255,48 +314,46 @@
     }
 
     function renderCards(dataset) {
-      const container = document.getElementById('cardsContainer');
-      container.innerHTML = '';
-
+      const container = document.getElementById("cardsContainer");
+      container.innerHTML = "";
       dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
-
-      dataset.forEach(item => {
-        const card = document.createElement('a');
-        card.className = 'card';
+      dataset.forEach((item) => {
+        const card = document.createElement("a");
+        card.className = "card";
         card.href = item.url;
-        card.target = '_blank';
-
+        card.target = "_blank";
         const dateObj = item.created ? new Date(item.created) : null;
-        const formattedDate = dateObj 
-          ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-          : 'n.d.';
-
+        const formattedDate = dateObj
+          ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`
+          : "n.d.";
         const domain = getDomain(item.url);
-
         card.innerHTML = `
-          <div class="image-container">
-            <img src="${item.cover || 'https://via.placeholder.com/250x140'}" alt="${item.title}" loading="lazy">
-          </div>
-          <div class="card-content">
-            <span class="badge">${formattedDate}</span>
-            <span class="badge source">${domain}</span>
-            <h3>${item.title}</h3>
-            <p>${item.excerpt || ''}</p>
-          </div>
-        `;
+        <div class="image-container">
+          <img src="${
+            item.cover || "https://via.placeholder.com/250x140"
+          }" alt="${item.title}" loading="lazy">
+        </div>
+        <div class="card-content">
+          <span class="badge">${formattedDate}</span>
+          <span class="badge source">${domain}</span>
+          <h3>${item.title}</h3>
+          <p>${item.excerpt || ""}</p>
+        </div>`;
         container.appendChild(card);
       });
-
-      document.getElementById('exportCount').textContent = dataset.length;
+      document.getElementById("exportCount").textContent = dataset.length;
     }
 
     function exportResults() {
       const csvContent = [
         ["title", "url", "created"],
-        ...filtered.map(item => [item.title, item.url, item.created])
+        ...filtered.map((item) => [item.title, item.url, item.created]),
       ]
-      .map(e => e.map(v => `"${v?.replace(/"/g, '""') || ''}"`).join(","))
-      .join("\n");
+        .map((e) => e.map((v) => `"${v?.replace(/"/g, '""') || ""}"`).join(","))
+        .join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
@@ -307,11 +364,17 @@
       document.body.removeChild(link);
     }
 
+    function clearCache() {
+      localStorage.removeItem("savedCSV");
+      showNotification("Cache cancellata.");
+      location.reload();
+    }
+
     function getDomain(url) {
       try {
-        return new URL(url).hostname.replace('www.', '');
+        return new URL(url).hostname.replace("www.", "");
       } catch {
-        return 'unknown';
+        return "unknown";
       }
     }
   </script>
