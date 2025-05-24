@@ -80,6 +80,10 @@
          .hidden {
             display: none;
          }
+         #exportMenu {
+            position: absolute;
+            z-index: 999;
+         }
 
 
          #controls {
@@ -307,16 +311,16 @@
          <button onclick="applyFilters()">Go</button>
 <!--     -->
          <div class="export-dropdown-container">
-            <button class="icon-button" onclick="toggleExportMenu()" title="Export results">
+            <button class="icon-button" onclick="toggleExportMenu(event)" title="Export results">
                <svg class="icon" viewBox="0 0 24 24">
                   <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"/>
                </svg>
                <span id="exportCount">0</span>
             </button>
-            <div id="exportMenu" class="export-menu hidden">
-               <button onclick="exportResults('csv')">Esporta CSV</button>
-               <button onclick="exportResults('markdown')">Copia Markdown</button>
-               <button onclick="exportResults('text')">Copia solo link</button>
+            <div id="exportMenu" class="hidden menu-box">
+               <button onclick="exportResults('csv')">CSV</button>
+               <button onclick="exportResults('markdown')">Markdown</button>
+               <button onclick="exportResults('text')">Solo URL</button>
             </div>
          </div>
 
@@ -548,6 +552,40 @@
             updateExportCount();
          }
          
+         function copyToClipboard(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+               navigator.clipboard.writeText(text)
+               .then(() => showNotification("Copiato negli appunti!"))
+               .catch(err => {
+                  console.error("Clipboard API error:", err);
+                  fallbackCopyText(text);
+               });
+            } else {
+               fallbackCopyText(text);
+            }
+         }
+         
+         function fallbackCopyText(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.setAttribute("readonly", "");
+            textarea.style.position = "absolute";
+            textarea.style.left = "-9999px";
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+               document.execCommand("copy");
+               showNotification("Copiato negli appunti!");
+            } catch (err) {
+               console.error("Fallback copy failed", err);
+               alert("Errore durante la copia negli appunti.");
+            }
+            
+            document.body.removeChild(textarea);
+         }
+
+         
          function renderCards(dataset) {
             const container =
             document.getElementById("cardsContainer");
@@ -778,43 +816,43 @@
             });
          }
          
-         function toggleExportMenu() {
+         function toggleExportMenu(event) {
+            event.stopPropagation();
+            event.preventDefault();
+            
             const menu = document.getElementById("exportMenu");
-            menu.classList.toggle("hidden");
-         }
-         
-         function exportResults(format = 'csv') {
-            const selectedData = selectionMode && selectedItems.size > 0
-            ? filtered.filter((item) => selectedItems.has(item.url))
-            : filtered;
+            const btn = event.currentTarget;
+            const rect = btn.getBoundingClientRect();
             
-            if (selectedData.length === 0) {
-               showNotification("Nessun risultato da esportare.");
-               return;
-            }
+            // Prima mostra il menu per ottenere correttamente la sua larghezza
+            menu.classList.remove("hidden");
+            menu.style.position = "absolute";
+            menu.style.visibility = "hidden"; // evita flicker durante il calcolo
+            menu.style.left = "0px"; // reset temporaneo
+            menu.style.top = "0px";
             
-            let content = "";
-            let filename = "export";
-            
-            if (format === 'csv') {
-               content = Papa.unparse(selectedData);
-               filename += ".csv";
-               const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-               downloadBlob(blob, filename);
-            } else if (format === 'markdown') {
-               content = selectedData.map(item => `- [${item.title}](${item.url})`).join("\n");
-               filename += ".md";
-               const blob = new Blob([content], { type: "text/markdown;charset=utf-8;" });
-               downloadBlob(blob, filename);
-            } else if (format === 'links') {
-               content = selectedData.map(item => item.url).join("\n");
-               filename += ".txt";
-               const blob = new Blob([content], { type: "text/plain;charset=utf-8;" });
-               downloadBlob(blob, filename);
-            }
-            
-            // Chiude il menu
-            document.getElementById("exportMenu").classList.add("hidden");
+            // Aspetta un frame per assicurarti che offsetWidth sia aggiornato
+            requestAnimationFrame(() => {
+               const menuWidth = menu.offsetWidth;
+               const x = rect.left + (rect.width / 2) - (menuWidth / 2);
+               const y = rect.bottom + 6; // 6px di margine verticale
+               
+               menu.style.left = `${x}px`;
+               menu.style.top = `${y}px`;
+               menu.style.visibility = "visible";
+               
+               // Toggle show/hide
+               const wasHidden = menu.dataset.visible !== "true";
+               menu.dataset.visible = wasHidden ? "true" : "false";
+               
+               if (!wasHidden) {
+                  menu.classList.add("hidden");
+                  document.removeEventListener("click", handleOutsideClick);
+               } else {
+                  menu.classList.remove("hidden");
+                  setTimeout(() => document.addEventListener("click", handleOutsideClick), 0);
+               }
+            });
          }
          
          function downloadBlob(blob, filename) {
@@ -837,6 +875,17 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+         }
+         
+         document.getElementById("exportMenu").classList.add("hidden");
+         document.removeEventListener("click", handleOutsideClick);
+         
+         function handleOutsideClick(e) {
+            const menu = document.getElementById("exportMenu");
+            if (!menu.contains(e.target)) {
+               menu.classList.add("hidden");
+               document.removeEventListener("click", handleOutsideClick);
+            }
          }
          
          function extractCardData(card) {
