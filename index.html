@@ -136,13 +136,14 @@
       border: 1px solid #333;
       padding: 4px 6px;
       border-radius: 3px;
-      display: inline-block;
-      align-self: flex-start;
-      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      line-height: 1;
     }
 
     .badge.source {
-      background-color: #888;
+      background-color: #aaa;
       color: #000;
       border-color: #aaa;
     }
@@ -217,120 +218,345 @@
       }
     }
   </style>
-</head>
-<body>
-  <div id="controls">
-    <input type="file" id="csvFile" accept=".csv" />
-    <input type="text" id="searchInput" placeholder="Search..." />
-    <div id="date-range">
-      <input type="date" id="startDate" title="From date" />
-      <input type="date" id="endDate" title="To date" />
-    </div>
-    <button onclick="applyDateFilter()">Go</button>
-    <button class="icon-button" onclick="exportResults()" title="Export results">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z" />
-      </svg>
-      <span id="exportCount">0</span>
-    </button>
-    <button class="icon-button" onclick="clearCache()" title="Clear saved data">
-      <svg class="icon" viewBox="0 0 24 24">
-        <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z" />
-      </svg>
-    </button>
-  </div>
-
-  <div id="cardsContainer"></div>
-  <div id="notification"></div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script>
-    let data = [];
-    let filtered = [];
-
-    function showNotification(message) {
-      const note = document.getElementById("notification");
-      note.textContent = message;
-      note.style.display = "block";
-      setTimeout(() => {
-        note.style.display = "none";
-      }, 3000);
-    }
-
-    window.addEventListener("load", () => {
-      const saved = localStorage.getItem("savedCSV");
-      if (saved) {
-        data = JSON.parse(saved);
-        filtered = [...data];
-        renderCards(filtered);
-        showNotification("Data loaded from browser.");
-      }
-
-      // NEW: enable Enter key to trigger search
-      document.getElementById("searchInput").addEventListener("keydown", function (event) {
-        if (event.key === "Enter") {
-          applyDateFilter();
+  <!DOCTYPE html>
+  <html lang="it">
+    <head>
+      <meta charset="UTF-8" />
+      <title>Deluge</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <style>
+        :root {
+          --bg-color: #000;
+          --text-color: #e0e0e0;
+          --card-bg: #111;
+          --accent: #00bcd4;
+          --border-color: #444;
         }
-      });
-    });
-
-    document.getElementById("csvFile").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function (results) {
-          data = results.data.filter((row) => row.title && row.url);
-          localStorage.setItem("savedCSV", JSON.stringify(data));
-          filtered = [...data];
+        
+        body {
+          background-color: var(--bg-color);
+          color: var(--text-color);
+          font-family: 'Segoe UI', sans-serif;
+          margin: 0;
+          padding: 20px;
+        }
+        
+        input,
+        button {
+          background: #222;
+          color: var(--text-color);
+          border: 1px solid var(--border-color);
+          padding: 10px;
+          font-size: 16px;
+          border-radius: 4px;
+          outline: none;
+          box-sizing: border-box;
+          height: 42px;
+        }
+        
+        button:hover {
+          background-color: var(--accent);
+          color: #000;
+          cursor: pointer;
+        }
+        
+        #controls {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+        
+        #date-range {
+          display: flex;
+          gap: 10px;
+          width: auto;
+        }
+        
+        #date-range input {
+          width: auto;
+          min-width: 120px;
+        }
+        
+        #cardsContainer {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 16px;
+          justify-content: center;
+        }
+        
+        .card {
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          width: 250px;
+          display: flex;
+          flex-direction: column;
+          text-decoration: none;
+          color: inherit;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+        }
+        
+        .card .image-container {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 */
+          overflow: hidden;
+        }
+        
+        .card .image-container img {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          margin: 0;
+        }
+        
+        .card-content {
+          padding: 10px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        
+        .card-content h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 700;
+          color: #fff;
+        }
+        
+        .card-content p {
+          margin: 0;
+          font-size: 14px;
+          color: #aaa;
+        }
+        
+        .badges-row {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 6px;
+          flex-wrap: nowrap;
+          align-items: center;
+        }
+        
+        .badge {
+          font-size: 12px;
+          color: #bbb;
+          background-color: #222;
+          border: 1px solid #333;
+          padding: 3px 6px;
+          border-radius: 3px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          height: 22px;
+          line-height: 1;
+          box-sizing: border-box;
+          vertical-align: middle;
+        }
+        
+        .badge.source {
+          background-color: #aaa;
+          color: #000;
+          border-color: #aaa;
+          font-weight: 500;
+        }
+        
+        .icon-button {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 10px 14px;
+          font-size: 16px;
+          background: #222;
+          color: var(--text-color);
+          border: 1px solid var(--border-color);
+          border-radius: 4px;
+          gap: 6px;
+          height: 42px;
+          width: auto;
+          min-width: 42px;
+          box-sizing: border-box;
+          cursor: pointer;
+          user-select: none;
+        }
+        
+        .icon-button:hover {
+          background-color: var(--accent);
+          color: #000;
+        }
+        
+        .icon {
+          width: 18px;
+          height: 18px;
+          fill: currentColor;
+        }
+        
+        #notification {
+          position: fixed;
+          bottom: 20px;
+          right: 20px;
+          background: #222;
+          color: #fff;
+          padding: 10px 16px;
+          border-radius: 4px;
+          font-size: 14px;
+          display: none;
+          z-index: 1000;
+          border: 1px solid #444;
+        }
+        
+        @media (max-width: 768px) {
+          #controls {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          
+          input,
+          button,
+          .icon-button {
+            width: 100%;
+          }
+          
+          #date-range {
+            width: 100%;
+            flex-direction: row;
+            gap: 10px;
+          }
+          
+          #date-range input {
+            flex: 1 1 50%;
+            min-width: 0;
+          }
+          
+          .card {
+            width: 100%;
+          }
+        }
+      </style>
+    </head>
+    <body>
+      <div id="controls">
+        <input type="file" id="csvFile" accept=".csv" />
+        <input type="text" id="searchInput" placeholder="Search..." />
+        <div id="date-range">
+          <input type="date" id="startDate" title="From date" />
+          <input type="date" id="endDate" title="To date" />
+        </div>
+        <button onclick="applyDateFilter()">Go</button>
+        <button class="icon-button" onclick="exportResults()" title="Export results">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z" />
+          </svg>
+          <span id="exportCount">0</span>
+        </button>
+        <button class="icon-button" onclick="clearCache()" title="Clear saved data">
+          <svg class="icon" viewBox="0 0 24 24">
+            <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z" />
+          </svg>
+        </button>
+      </div>
+      
+      <div id="cardsContainer"></div>
+      <div id="notification"></div>
+      
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+      <script>
+        let data = [];
+        let filtered = [];
+        
+        function showNotification(message) {
+          const note = document.getElementById("notification");
+          note.textContent = message;
+          note.style.display = "block";
+          setTimeout(() => {
+            note.style.display = "none";
+          }, 3000);
+        }
+        
+        window.addEventListener("load", () => {
+          const saved = localStorage.getItem("savedCSV");
+          if (saved) {
+            data = JSON.parse(saved);
+            filtered = [...data];
+            renderCards(filtered);
+            showNotification("Data loaded from browser.");
+          }
+          
+          document.getElementById("searchInput").addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+              applyDateFilter();
+            }
+          });
+        });
+        
+        document.getElementById("csvFile").addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function (results) {
+              data = results.data.filter((row) => row.title && row.url);
+              localStorage.setItem("savedCSV", JSON.stringify(data));
+              filtered = [...data];
+              renderCards(filtered);
+              showNotification("CSV loaded and saved in browser.");
+            },
+          });
+        });
+        
+        function applyDateFilter() {
+          const start = new Date(document.getElementById("startDate").value);
+          const end = new Date(document.getElementById("endDate").value);
+          const query = document.getElementById("searchInput").value.toLowerCase();
+          
+          filtered = data.filter((item) => {
+            const createdDate = new Date(item.created);
+            const matchesText =
+            !query ||
+            (item.title && item.title.toLowerCase().includes(query)) ||
+            (item.excerpt && item.excerpt.toLowerCase().includes(query));
+            const matchesDate =
+            (!isNaN(start) ? createdDate >= start : true) &&
+            (!isNaN(end) ? createdDate <= end : true);
+            return matchesText && matchesDate;
+          });
+          
           renderCards(filtered);
-          showNotification("CSV loaded and saved in browser.");
-        },
-      });
-    });
-
-    function applyDateFilter() {
-      const start = new Date(document.getElementById("startDate").value);
-      const end = new Date(document.getElementById("endDate").value);
-      const query = document.getElementById("searchInput").value.toLowerCase();
-
-      filtered = data.filter((item) => {
-        const createdDate = new Date(item.created);
-        const matchesText =
-          !query ||
-          (item.title && item.title.toLowerCase().includes(query)) ||
-          (item.excerpt && item.excerpt.toLowerCase().includes(query));
-        const matchesDate =
-          (!isNaN(start) ? createdDate >= start : true) &&
-          (!isNaN(end) ? createdDate <= end : true);
-        return matchesText && matchesDate;
-      });
-
-      renderCards(filtered);
-    }
-
-    function renderCards(dataset) {
-      const container = document.getElementById("cardsContainer");
-      container.innerHTML = "";
-      dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
-      dataset.forEach((item) => {
-        const card = document.createElement("a");
-        card.className = "card";
-        card.href = item.url;
-        card.target = "_blank";
-        const dateObj = item.created ? new Date(item.created) : null;
-        const formattedDate = dateObj
-          ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {
+        }
+        
+        function renderCards(dataset) {
+          const container = document.getElementById("cardsContainer");
+          container.innerHTML = "";
+          dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
+          dataset.forEach((item) => {
+            const card = document.createElement("a");
+            card.className = "card";
+            card.href = item.url;
+            card.target = "_blank";
+            const dateObj = item.created ? new Date(item.created) : null;
+            const formattedDate = dateObj
+            ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}`
-          : "n.d.";
-        const domain = getDomain(item.url);
-        card.innerHTML = `
+            : "n.d.";
+            const domain = getDomain(item.url);
+            card.innerHTML = `
         <div class="image-container">
           <img src="${
             item.cover || "https://via.placeholder.com/250x140"
-          }" alt="${item.title}" loading="lazy">
+            }" alt="${item.title}" loading="lazy">
         </div>
         <div class="card-content">
           <div class="badges-row">
@@ -340,45 +566,45 @@
           <h3>${item.title}</h3>
           <p>${item.excerpt || ""}</p>
         </div>`;
-        container.appendChild(card);
-      });
-      document.getElementById("exportCount").textContent = dataset.length;
-    }
-
-    function exportResults() {
-      const queryRaw = document.getElementById("searchInput").value.trim();
-      const query = queryRaw.replace(/\s+/g, "");
-      const startDateVal = document.getElementById("startDate").value;
-      const endDateVal = document.getElementById("endDate").value;
-
-      function formatDate(d) {
-        if (!d) return "";
-        const date = new Date(d);
-        if (isNaN(date)) return "";
-        const dd = String(date.getDate()).padStart(2, "0");
-        const mm = String(date.getMonth() + 1).padStart(2, "0");
-        const yyyy = date.getFullYear();
-        return `${dd}-${mm}-${yyyy}`;
-      }
-
-      const startFormatted = formatDate(startDateVal);
-      const endFormatted = formatDate(endDateVal);
-
-      let fileNameParts = [];
-      if (query) fileNameParts.push(query);
-      if (startFormatted) fileNameParts.push(startFormatted);
-      if (endFormatted) fileNameParts.push(endFormatted);
-
-      const fileName =
-        fileNameParts.length > 0
+            container.appendChild(card);
+          });
+          document.getElementById("exportCount").textContent = dataset.length;
+        }
+        
+        function exportResults() {
+          const queryRaw = document.getElementById("searchInput").value.trim();
+          const query = queryRaw.replace(/\s+/g, "");
+          const startDateVal = document.getElementById("startDate").value;
+          const endDateVal = document.getElementById("endDate").value;
+          
+          function formatDate(d) {
+            if (!d) return "";
+            const date = new Date(d);
+            if (isNaN(date)) return "";
+            const dd = String(date.getDate()).padStart(2, "0");
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const yyyy = date.getFullYear();
+            return `${dd}-${mm}-${yyyy}`;
+          }
+          
+          const startFormatted = formatDate(startDateVal);
+          const endFormatted = formatDate(endDateVal);
+          
+          let fileNameParts = [];
+          if (query) fileNameParts.push(query);
+          if (startFormatted) fileNameParts.push(startFormatted);
+          if (endFormatted) fileNameParts.push(endFormatted);
+          
+          const fileName =
+          fileNameParts.length > 0
           ? fileNameParts.join("_") + ".csv"
           : "search_results.csv";
-
-      const csvContent = [
-        ["title", "url", "created"],
-        ...filtered.map((item) => [item.title, item.url, item.created]),
-      ]
-        .map((e) => e.map((v) => `"${v?.replace(/"/g, '""') || ""}"`).join(","))
+          
+          const csvContent = [
+            ["title", "url", "created"],
+            ...filtered.map((item) => [item.title, item.url, item.created]),
+          ]
+          .map((e) => e.map((v) => `"${v?.replace(/"/g, '""') || ""}"`).join(","))
         .join("\n");
 
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
