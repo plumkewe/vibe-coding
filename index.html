@@ -45,7 +45,7 @@
          .export-menu {
             position: absolute;
             top: 100%;
-            left: 0;
+            right: 0;
             background: var(--card-bg);        /* sfondo scuro */
             color: var(--text-color);          /* testo chiaro */
             border: 1px solid var(--border-color);
@@ -317,7 +317,7 @@
                </svg>
                <span id="exportCount">0</span>
             </button>
-            <div id="exportMenu" class="hidden menu-box">
+            <div id="exportMenu" class="hidden export-menu">
                <button onclick="exportResults('csv')">CSV</button>
                <button onclick="exportResults('markdown')">Markdown</button>
                <button onclick="exportResults('text')">Solo URL</button>
@@ -783,7 +783,7 @@
             }
             
             if (type === "csv") {
-               const fileName = generateFileName() + ".csv";
+               const fileName = buildFileName();
                const csvContent = Papa.unparse(selectedData);
                const encodedUri = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
                const link = document.createElement("a");
@@ -818,41 +818,13 @@
          
          function toggleExportMenu(event) {
             event.stopPropagation();
-            event.preventDefault();
-            
             const menu = document.getElementById("exportMenu");
-            const btn = event.currentTarget;
-            const rect = btn.getBoundingClientRect();
+            menu.classList.toggle("hidden");
             
-            // Prima mostra il menu per ottenere correttamente la sua larghezza
-            menu.classList.remove("hidden");
-            menu.style.position = "absolute";
-            menu.style.visibility = "hidden"; // evita flicker durante il calcolo
-            menu.style.left = "0px"; // reset temporaneo
-            menu.style.top = "0px";
-            
-            // Aspetta un frame per assicurarti che offsetWidth sia aggiornato
-            requestAnimationFrame(() => {
-               const menuWidth = menu.offsetWidth;
-               const x = rect.left + (rect.width / 2) - (menuWidth / 2);
-               const y = rect.bottom + 6; // 6px di margine verticale
-               
-               menu.style.left = `${x}px`;
-               menu.style.top = `${y}px`;
-               menu.style.visibility = "visible";
-               
-               // Toggle show/hide
-               const wasHidden = menu.dataset.visible !== "true";
-               menu.dataset.visible = wasHidden ? "true" : "false";
-               
-               if (!wasHidden) {
-                  menu.classList.add("hidden");
-                  document.removeEventListener("click", handleOutsideClick);
-               } else {
-                  menu.classList.remove("hidden");
-                  setTimeout(() => document.addEventListener("click", handleOutsideClick), 0);
-               }
-            });
+            // chiudi menu cliccando fuori
+            if (!menu.classList.contains("hidden")) {
+               document.addEventListener("click", handleOutsideClick);
+            }
          }
          
          function downloadBlob(blob, filename) {
@@ -877,16 +849,14 @@
             document.body.removeChild(link);
          }
          
-         document.getElementById("exportMenu").classList.add("hidden");
-         document.removeEventListener("click", handleOutsideClick);
-         
-         function handleOutsideClick(e) {
+         function handleOutsideClick(event) {
             const menu = document.getElementById("exportMenu");
-            if (!menu.contains(e.target)) {
+            if (!menu.contains(event.target)) {
                menu.classList.add("hidden");
                document.removeEventListener("click", handleOutsideClick);
             }
          }
+
          
          function extractCardData(card) {
             return {
