@@ -1,895 +1,625 @@
 <!DOCTYPE html>
 <html lang="it">
-	<head>
-		<meta charset="UTF-8" />
-		<title>Deluge</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<style>
-			:root {
-				--bg-color: #000;
-				--text-color: #e0e0e0;
-				--card-bg: #111;
-				--accent: #00bcd4;
-				--border-color: #444;
-			}
-
-			body {
-				background-color: var(--bg-color);
-				color: var(--text-color);
-				font-family: "Segoe UI", sans-serif;
-				margin: 0;
-				padding: 20px;
-			}
-
-			input,
-			button {
-				background: #222;
-				color: var(--text-color);
-				border: 1px solid var(--border-color);
-				padding: 10px;
-				font-size: 16px;
-				border-radius: 4px;
-				outline: none;
-				box-sizing: border-box;
-				height: 42px;
-			}
-
-			button:hover {
-				background-color: var(--accent);
-				color: #000;
-				cursor: pointer;
-			}
-
-			#controls {
-				display: flex;
-				flex-wrap: wrap;
-				justify-content: center;
-				align-items: center;
-				gap: 10px;
-				margin-bottom: 20px;
-			}
-
-			#date-range {
-				display: flex;
-				gap: 10px;
-				width: auto;
-			}
-
-			#date-range input {
-				width: auto;
-				min-width: 120px;
-			}
-
-			#cardsContainer {
-				display: flex;
-				flex-wrap: wrap;
-				gap: 16px;
-				justify-content: center;
-			}
-
-			.card {
-				background: var(--card-bg);
-				border: 1px solid var(--border-color);
-				width: 250px;
-				display: flex;
-				flex-direction: column;
-				text-decoration: none;
-				color: inherit;
-				transition: transform 0.2s ease, box-shadow 0.2s ease;
-			}
-
-			.card:hover {
-				transform: translateY(-4px);
-				box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
-			}
-
-			.card .image-container {
-				position: relative;
-				width: 100%;
-				padding-top: 56.25%; /* 16:9 */
-				overflow: hidden;
-			}
-
-			.card .image-container img {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				object-fit: cover;
-				display: block;
-				margin: 0;
-			}
-
-			.card-content {
-				padding: 10px;
-				display: flex;
-				flex-direction: column;
-				gap: 6px;
-			}
-
-			.card-content h3 {
-				margin: 0;
-				font-size: 18px;
-				font-weight: 700;
-				color: #fff;
-			}
-
-			.card-content p {
-				margin: 0;
-				font-size: 14px;
-				color: #aaa;
-			}
-
-			.badges-row {
-				display: flex;
-				gap: 10px;
-				margin-bottom: 6px;
-				flex-wrap: wrap; /* permette ai tag di andare a capo */
-				align-items: center;
-				overflow: hidden; /* evita overflow esterno */
-			}
-
-			.badge {
-				font-size: 12px;
-				color: #bbb;
-				background-color: #222;
-				border: 1px solid #333;
-				padding: 3px 6px;
-				border-radius: 3px;
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				height: 22px;
-				line-height: 1;
-				box-sizing: border-box;
-				vertical-align: middle;
-
-				white-space: nowrap; /* NON spezzare il testo dentro il badge */
-			}
-
-			.badge.date-badge {
-				white-space: nowrap; /* la data non va mai a capo */
-			}
-
-			.badge.source {
-				/* Stile uguale al badge data ma con colori grigio più chiari */
-				background-color: #555; /* grigio più chiaro di #222 */
-				color: #ddd; /* testo grigio chiaro */
-				border-color: #777;
-				font-weight: 500;
-			}
-
-			.icon-button {
-				display: inline-flex;
-				align-items: center;
-				justify-content: center;
-				padding: 10px 14px;
-				font-size: 16px;
-				background: #222;
-				color: var(--text-color);
-				border: 1px solid var(--border-color);
-				border-radius: 4px;
-				gap: 6px;
-				height: 42px;
-				width: auto;
-				min-width: 42px;
-				box-sizing: border-box;
-				cursor: pointer;
-				user-select: none;
-			}
-
-			.icon-button:hover {
-				background-color: var(--accent);
-				color: #000;
-			}
-
-			.icon {
-				width: 18px;
-				height: 18px;
-				fill: currentColor;
-			}
-
-			#notification {
-				position: fixed;
-				bottom: 20px;
-				right: 20px;
-				background: #222;
-				color: #fff;
-				padding: 10px 16px;
-				border-radius: 4px;
-				font-size: 14px;
-				display: none;
-				z-index: 1000;
-				border: 1px solid #444;
-			}
-			
-			#tagFilterMenu {
-				margin: 10px 0 20px 0;
-				padding: 10px;
-				border: 1px solid var(--border-color);
-				background-color: var(--card-bg);
-				color: var(--text-color);
-				font-size: 14px;
-				max-height: 120px;
-				overflow-y: auto;
-				border-radius: 6px;
-				display: flex;
-				flex-wrap: wrap;
-				gap: 10px;
-			}
-			
-			#tagFilterMenu label {
-				cursor: pointer;
-				user-select: none;
-				display: flex;
-				align-items: center;
-				gap: 6px;
-				padding: 4px 8px;
-				background-color: #222;
-				border: 1px solid #444;
-				border-radius: 4px;
-				transition: background-color 0.2s ease,
-				border-color 0.2s ease;
-				color: var(--text-color);
-			}
-			
-			#tagFilterMenu label:hover {
-				background-color: var(--accent);
-				color: #000;
-				border-color: var(--accent);
-			}
-			
-			#tagFilterMenu input[type="checkbox"] {
-				width: 16px;
-				height: 16px;
-				cursor: pointer;
-			}
-
-			@media (max-width: 768px) {
-				#controls {
-					flex-direction: column;
-					align-items: stretch;
-				}
-				
-
-				input,
-				button,
-				.icon-button {
-					width: 100%;
-				}
-
-				#date-range {
-					width: 100%;
-				}
-
-				#date-range input {
-					flex: 1 1 50%;
-					min-width: 0;
-				}
-
-				.card {
-					width: 100%;
-				}
-			}
-		</style>
-		<!DOCTYPE html>
-		<html lang="it">
-			<head>
-				<meta charset="UTF-8" />
-				<title>Deluge</title>
-				<meta
-					name="viewport"
-					content="width=device-width, initial-scale=1.0"
-				/>
-				<style>
-					:root {
-						--bg-color: #000;
-						--text-color: #e0e0e0;
-						--card-bg: #111;
-						--accent: #00bcd4;
-						--border-color: #444;
-					}
-
-					body {
-						background-color: var(--bg-color);
-						color: var(--text-color);
-						font-family: "Segoe UI", sans-serif;
-						margin: 0;
-						padding: 20px;
-					}
-
-					input,
-					button {
-						background: #222;
-						color: var(--text-color);
-						border: 1px solid var(--border-color);
-						padding: 10px;
-						font-size: 16px;
-						border-radius: 4px;
-						outline: none;
-						box-sizing: border-box;
-						height: 42px;
-					}
-
-					button:hover {
-						background-color: var(--accent);
-						color: #000;
-						cursor: pointer;
-					}
-
-					#controls {
-						display: flex;
-						flex-wrap: wrap;
-						justify-content: center;
-						align-items: center;
-						gap: 10px;
-						margin-bottom: 20px;
-					}
-
-					#date-range {
-						display: flex;
-						gap: 10px;
-						width: auto;
-					}
-
-					#date-range input {
-						width: auto;
-						min-width: 120px;
-					}
-
-					#cardsContainer {
-						display: flex;
-						flex-wrap: wrap;
-						gap: 16px;
-						justify-content: center;
-					}
-
-					.card {
-						background: var(--card-bg);
-						border: 1px solid var(--border-color);
-						width: 250px; /* oppure width: 100%; se vuoi responsive */
-						display: flex;
-						flex-direction: column;
-						text-decoration: none;
-						color: inherit;
-						transition: transform 0.2s ease, box-shadow 0.2s ease;
-						overflow: visible; /* Importante: permette al contenuto di uscire se serve */
-					}
-
-					.card:hover {
-						transform: translateY(-4px);
-						box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
-					}
-
-					.card .image-container {
-						position: relative;
-						width: 100%;
-						padding-top: 56.25%; /* 16:9 */
-						overflow: hidden;
-					}
-
-					.card .image-container img {
-						position: absolute;
-						top: 0;
-						left: 0;
-						width: 100%;
-						height: 100%;
-						object-fit: cover;
-						display: block;
-						margin: 0;
-					}
-
-					.card-content {
-						padding: 10px;
-						display: flex;
-						flex-direction: column;
-						gap: 6px;
-					}
-
-					.card-content h3 {
-						margin: 0;
-						font-size: 18px;
-						font-weight: 700;
-						color: #fff;
-					}
-
-					.card-content p {
-						margin: 0;
-						font-size: 14px;
-						color: #aaa;
-					}
-
-					.badges-row {
-						display: flex;
-						gap: 10px;
-						margin-bottom: 6px;
-						flex-wrap: wrap; /* Permette ai badge di andare a capo */
-						align-items: center;
-						width: 100%; /* Assicura che il container utilizzi tutta la larghezza possibile */
-						overflow: visible; /* Importante: evita che i tag vengano tagliati */
-					}
-
-					.badge {
-						font-size: 12px;
-						color: #bbb;
-						background-color: #222;
-						border: 1px solid #333;
-						padding: 3px 6px;
-						border-radius: 3px;
-						display: inline-flex;
-						align-items: center;
-						justify-content: center;
-						height: 22px;
-						line-height: 1;
-						box-sizing: border-box;
-						vertical-align: middle;
-					}
-
-					.badge.clickable {
-						cursor: pointer;
-						transition: transform 0.2s ease;
-					}
-
-					.badge.clickable:hover {
-						transform: scale(1.1);
-					}
-					.icon-button {
-						display: inline-flex;
-						align-items: center;
-						justify-content: center;
-						padding: 10px 14px;
-						font-size: 16px;
-						background: #222;
-						color: var(--text-color);
-						border: 1px solid var(--border-color);
-						border-radius: 4px;
-						gap: 6px;
-						height: 42px;
-						width: auto;
-						min-width: 42px;
-						box-sizing: border-box;
-						cursor: pointer;
-						user-select: none;
-					}
-
-					.icon-button:hover {
-						background-color: var(--accent);
-						color: #000;
-					}
-
-					.icon {
-						width: 18px;
-						height: 18px;
-						fill: currentColor;
-					}
-
-					#notification {
-						position: fixed;
-						bottom: 20px;
-						right: 20px;
-						background: #222;
-						color: #fff;
-						padding: 10px 16px;
-						border-radius: 4px;
-						font-size: 14px;
-						display: none;
-						z-index: 1000;
-						border: 1px solid #444;
-					}
-
-					@media (max-width: 768px) {
-						#controls {
-							flex-direction: column;
-							align-items: stretch;
-						}
-
-						input,
-						button,
-						.icon-button {
-							width: 100%;
-						}
-
-						#date-range {
-							width: 100%;
-							flex-direction: row;
-							gap: 10px;
-						}
-
-						#date-range input {
-							flex: 1 1 50%;
-							min-width: 0;
-						}
-
-						.card {
-							width: 100%;
-						}
-					}
-				</style>
-			</head>
-			<body>
-				<div id="controls">
-					<input type="file" id="csvFile" accept=".csv" />
-					<input
-						type="text"
-						id="searchInput"
-						placeholder="Search..."
-					/>
-					<div id="date-range">
-						<input type="date" id="startDate" title="From date" />
-						<input type="date" id="endDate" title="To date" />
-					</div>
-					<button onclick="applyFilters()">Go</button>
-					<button
-						class="icon-button"
-						onclick="exportResults()"
-						title="Export results"
-					>
-						<svg class="icon" viewBox="0 0 24 24">
-							<path
-								d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"
-							/>
-						</svg>
-						<span id="exportCount">0</span>
-					</button>
-					<button
-						class="icon-button"
-						onclick="clearCache()"
-						title="Clear saved data"
-					>
-						<svg class="icon" viewBox="0 0 24 24">
-							<path
-								d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z"
-							/>
-						</svg>
-					</button>
-				</div>
-
-				<!-- Menu visivo per filtro tag -->
-				<div id="tagFilterMenu"></div>
-
-				<div id="cardsContainer"></div>
-				<div id="notification"></div>
-
-				<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-				<script>
-					let data = [];
-					let filtered = [];
-					let selectedTags = [];
-
-					function showNotification(message) {
-						const note = document.getElementById("notification");
-						note.textContent = message;
-						note.style.display = "block";
-						setTimeout(() => {
-							note.style.display = "none";
-						}, 3000);
-					}
-
-					window.addEventListener("load", () => {
-						const saved = localStorage.getItem("savedCSV");
-						if (saved) {
-							data = JSON.parse(saved);
-							filtered = [...data];
-							onDataLoaded();
-							showNotification("Data loaded from browser.");
-						}
-
-						document
-							.getElementById("searchInput")
-							.addEventListener("keydown", function (event) {
-								if (event.key === "Enter") {
-									applyFilters();
-								}
-							});
-					});
-
-					document
-						.getElementById("csvFile")
-						.addEventListener("change", function (e) {
-							const file = e.target.files[0];
-							Papa.parse(file, {
-								header: true,
-								skipEmptyLines: true,
-								complete: function (results) {
-									data = results.data.filter(
-										(row) => row.title && row.url
-									);
-									localStorage.setItem(
-										"savedCSV",
-										JSON.stringify(data)
-									);
-									filtered = [...data];
-									onDataLoaded();
-									showNotification(
-										"CSV loaded and saved in browser."
-									);
-								},
-							});
-						});
-
-					function buildTagFilterMenu() {
-						const container =
-							document.getElementById("tagFilterMenu");
-						container.innerHTML = "";
-
-						const tagCounts = {};
-
-						data.forEach((item) => {
-							if (!item.tags) return;
-							const tags = item.tags
-								.split(",")
-								.map((t) => t.trim());
-							tags.forEach((tag) => {
-								tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-							});
-						});
-
-						const sortedTags = Object.keys(tagCounts).sort(
-							(a, b) => tagCounts[b] - tagCounts[a]
-						);
-
-						sortedTags.forEach((tag) => {
-							const label = document.createElement("label");
-							label.style.marginRight = "10px";
-							label.style.cursor = "pointer";
-
-							const checkbox = document.createElement("input");
-							checkbox.type = "checkbox";
-							checkbox.value = tag;
-							checkbox.checked = selectedTags.includes(tag);
-
-							checkbox.addEventListener("change", (e) => {
-								const t = e.target.value;
-								if (e.target.checked) {
-									if (!selectedTags.includes(t))
-										selectedTags.push(t);
-								} else {
-									selectedTags = selectedTags.filter(
-										(x) => x !== t
-									);
-								}
-								applyFilters();
-							});
-
-							label.appendChild(checkbox);
-							label.appendChild(
-								document.createTextNode(
-									` ${tag} (${tagCounts[tag]})`
-								)
-							);
-							container.appendChild(label);
-						});
-					}
-
-					function applyFilters() {
-						const start = new Date(
-							document.getElementById("startDate").value
-						);
-						const end = new Date(
-							document.getElementById("endDate").value
-						);
-						const query = document
-							.getElementById("searchInput")
-							.value.toLowerCase();
-
-						filtered = data.filter((item) => {
-							const matchesText =
-								!query ||
-								(item.title &&
-									item.title.toLowerCase().includes(query)) ||
-								(item.excerpt &&
-									item.excerpt.toLowerCase().includes(query));
-
-							const createdDate = new Date(item.created);
-							const matchesDate =
-								(!isNaN(start) ? createdDate >= start : true) &&
-								(!isNaN(end) ? createdDate <= end : true);
-
-							let matchesTags = true;
-							if (selectedTags.length > 0) {
-								if (!item.tags) return false;
-								const itemTags = item.tags
-									.split(",")
-									.map((t) => t.trim());
-								matchesTags = selectedTags.every((tag) =>
-									itemTags.includes(tag)
-								);
-							}
-
-							return matchesText && matchesDate && matchesTags;
-						});
-
-						renderCards(filtered);
-						showNotification(
-							selectedTags.length > 0
-								? `Filtrate per tag: ${selectedTags.join(", ")}`
-								: "Filtro tag disattivato"
-						);
-
-						document.getElementById("exportCount").textContent =
-							filtered.length;
-					}
-
-					function renderCards(dataset) {
-						const container =
-							document.getElementById("cardsContainer");
-						container.innerHTML = "";
-
-						dataset.sort(
-							(a, b) => new Date(b.created) - new Date(a.created)
-						);
-
-						dataset.forEach((item) => {
-							const card = document.createElement("a");
-							card.className = "card";
-							card.href = item.url;
-							card.target = "_blank";
-
-							const dateObj = item.created
-								? new Date(item.created)
-								: null;
-							const formattedDate = dateObj
-								? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString(
-										[],
-										{
-											hour: "2-digit",
-											minute: "2-digit",
-										}
-								  )}`
-								: "n.d.";
-							const domain = getDomain(item.url);
-
-							const tagsArray =
-								typeof item.tags === "string"
-									? item.tags.split(",").map((t) => t.trim())
-									: [];
-
-							const tagsHTML = tagsArray
-								.map((tag) => {
-									const color = generateTagColor(tag);
-									// Evidenzia tag selezionati
-									const selectedClass = selectedTags.includes(
-										tag
-									)
-										? "selected-tag"
-										: "";
-									return `<span class="badge clickable ${selectedClass}" style="background-color: ${color}; color: #000;">${tag}</span>`;
-								})
-								.join(" ");
-
-							card.innerHTML = `
-      <div class="image-container">
-        <img src="${
-			item.cover || "https://via.placeholder.com/250x140"
-		}" alt="${item.title}" loading="lazy">
+   <head>
+      <meta charset="UTF-8" />
+      <title>Deluge</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <style>
+         :root {
+         --bg-color: #000;
+         --text-color: #e0e0e0;
+         --card-bg: #111;
+         --accent: #00bcd4;
+         --border-color: #444;
+         }
+         body {
+         background-color: var(--bg-color);
+         color: var(--text-color);
+         font-family: "Segoe UI", sans-serif;
+         margin: 0;
+         padding: 20px;
+         }
+         input,
+         button {
+         background: #222;
+         color: var(--text-color);
+         border: 1px solid var(--border-color);
+         padding: 10px;
+         font-size: 16px;
+         border-radius: 4px;
+         outline: none;
+         box-sizing: border-box;
+         height: 42px;
+         }
+         button:hover {
+         background-color: var(--accent);
+         color: #000;
+         cursor: pointer;
+         }
+         #controls {
+         display: flex;
+         flex-wrap: wrap;
+         justify-content: center;
+         align-items: center;
+         gap: 10px;
+         margin-bottom: 20px;
+         }
+         #date-range {
+         display: flex;
+         gap: 10px;
+         width: auto;
+         }
+         #date-range input {
+         width: auto;
+         min-width: 120px;
+         }
+         #cardsContainer {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 16px;
+         justify-content: center;
+         }
+         .card {
+         background: var(--card-bg);
+         border: 1px solid var(--border-color);
+         width: 250px;
+         display: flex;
+         flex-direction: column;
+         text-decoration: none;
+         color: inherit;
+         transition: transform 0.2s ease, box-shadow 0.2s ease;
+         }
+         .card:hover {
+         transform: translateY(-4px);
+         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+         }
+         .card .image-container {
+         position: relative;
+         width: 100%;
+         padding-top: 56.25%; /* 16:9 */
+         overflow: hidden;
+         }
+         .card .image-container img {
+         position: absolute;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         object-fit: cover;
+         display: block;
+         margin: 0;
+         }
+         .card-content {
+         padding: 10px;
+         display: flex;
+         flex-direction: column;
+         gap: 6px;
+         }
+         .card-content h3 {
+         margin: 0;
+         font-size: 18px;
+         font-weight: 700;
+         color: #fff;
+         }
+         .card-content p {
+         margin: 0;
+         font-size: 14px;
+         color: #aaa;
+         }
+         .badges-row {
+         display: flex;
+         gap: 10px;
+         margin-bottom: 6px;
+         flex-wrap: wrap; /* permette ai tag di andare a capo */
+         align-items: center;
+         overflow: hidden; /* evita overflow esterno */
+         }
+         .badge {
+         font-size: 12px;
+         color: #bbb;
+         background-color: #222;
+         border: 1px solid #333;
+         padding: 3px 6px;
+         border-radius: 3px;
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         height: 22px;
+         line-height: 1;
+         box-sizing: border-box;
+         vertical-align: middle;
+         white-space: nowrap; /* NON spezzare il testo dentro il badge */
+         }
+         .badge.date-badge {
+         white-space: nowrap; /* la data non va mai a capo */
+         }
+         .badge.source {
+         /* Stile uguale al badge data ma con colori grigio più chiari */
+         background-color: #555; /* grigio più chiaro di #222 */
+         color: #ddd; /* testo grigio chiaro */
+         border-color: #777;
+         font-weight: 500;
+         }
+         .icon-button {
+         display: inline-flex;
+         align-items: center;
+         justify-content: center;
+         padding: 10px 14px;
+         font-size: 16px;
+         background: #222;
+         color: var(--text-color);
+         border: 1px solid var(--border-color);
+         border-radius: 4px;
+         gap: 6px;
+         height: 42px;
+         width: auto;
+         min-width: 42px;
+         box-sizing: border-box;
+         cursor: pointer;
+         user-select: none;
+         }
+         .icon-button:hover {
+         background-color: var(--accent);
+         color: #000;
+         }
+         .icon {
+         width: 18px;
+         height: 18px;
+         fill: currentColor;
+         }
+         #notification {
+         position: fixed;
+         bottom: 20px;
+         right: 20px;
+         background: #222;
+         color: #fff;
+         padding: 10px 16px;
+         border-radius: 4px;
+         font-size: 14px;
+         display: none;
+         z-index: 1000;
+         border: 1px solid #444;
+         }
+         #tagFilterMenu {
+         margin: 10px 0 20px 0;
+         padding: 10px;
+         border: 1px solid var(--border-color);
+         background-color: var(--card-bg);
+         color: var(--text-color);
+         font-size: 14px;
+         max-height: 120px;
+         overflow-y: auto;
+         border-radius: 6px;
+         display: flex;
+         flex-wrap: wrap;
+         gap: 10px;
+         }
+         #tagFilterMenu label {
+         cursor: pointer;
+         user-select: none;
+         display: flex;
+         align-items: center;
+         gap: 6px;
+         padding: 4px 8px;
+         background-color: #222;
+         border: 1px solid #444;
+         border-radius: 4px;
+         transition: background-color 0.2s ease,
+         border-color 0.2s ease;
+         color: var(--text-color);
+         margin: 5px;
+         }
+         #tagFilterMenu label:hover {
+         background-color: var(--accent);
+         color: #000;
+         border-color: var(--accent);
+         }
+         #tagFilterMenu input[type="checkbox"] {
+         width: 16px;
+         height: 16px;
+         cursor: pointer;
+         }
+         @media (max-width: 768px) {
+         #controls {
+         flex-direction: column;
+         align-items: stretch;
+         }
+         input,
+         button,
+         .icon-button {
+         width: 100%;
+         }
+         #date-range {
+         width: 100%;
+         }
+         #date-range input {
+         flex: 1 1 50%;
+         min-width: 0;
+         }
+         .card {
+         width: 100%;
+         }
+         }
+      </style>
+   </head>
+   <body>
+      <div id="controls">
+         <input type="file" id="csvFile" accept=".csv" />
+         <input
+            type="text"
+            id="searchInput"
+            placeholder="Search..."
+            />
+         <div id="date-range">
+            <input type="date" id="startDate" title="From date" />
+            <input type="date" id="endDate" title="To date" />
+         </div>
+         <button onclick="applyFilters()">Go</button>
+         <button
+            class="icon-button"
+            onclick="exportResults()"
+            title="Export results"
+            >
+            <svg class="icon" viewBox="0 0 24 24">
+               <path
+                  d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z"
+                  />
+            </svg>
+            <span id="exportCount">0</span>
+         </button>
+         <button
+            class="icon-button"
+            onclick="clearCache()"
+            title="Clear saved data"
+            >
+            <svg class="icon" viewBox="0 0 24 24">
+               <path
+                  d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z"
+                  />
+            </svg>
+         </button>
       </div>
-      <div class="card-content">
-        <div class="badges-row">
-          <span class="badge date-badge">${formattedDate}</span>
-          <span class="badge source">${domain}</span>
-          ${tagsHTML}
-        </div>
-        <h3>${item.title}</h3>
-        <p>${item.excerpt || ""}</p>
-      </div>`;
-
-							container.appendChild(card);
-						});
-
-						// Listener per i badge cliccabili (filtro tag da card)
-						document
-							.querySelectorAll(".badge.clickable")
-							.forEach((badge) => {
-								badge.addEventListener("click", (event) => {
-									event.preventDefault();
-									event.stopPropagation();
-									const tag = badge.textContent.trim();
-
-									// Toggle selezione tag nel menu
-									const index = selectedTags.indexOf(tag);
-									if (index === -1) {
-										selectedTags.push(tag);
-									} else {
-										selectedTags.splice(index, 1);
-									}
-									buildTagFilterMenu();
-									applyFilters();
-								});
-							});
-
-						document.getElementById("exportCount").textContent =
-							dataset.length;
-					}
-
-					const tagColors = {};
-
-					function generateTagColor(tag) {
-						if (!tagColors[tag]) {
-							const hue = Math.floor(Math.random() * 360);
-							tagColors[tag] = `hsl(${hue}, 70%, 80%)`;
-						}
-						return tagColors[tag];
-					}
-
-					function exportResults() {
-						const queryRaw = document
-							.getElementById("searchInput")
-							.value.trim();
-						const query = queryRaw.replace(/\s+/g, "");
-						const startDateVal =
-							document.getElementById("startDate").value;
-						const endDateVal =
-							document.getElementById("endDate").value;
-
-						function formatDate(d) {
-							if (!d) return "";
-							const date = new Date(d);
-							if (isNaN(date)) return "";
-							const dd = String(date.getDate()).padStart(2, "0");
-							const mm = String(date.getMonth() + 1).padStart(
-								2,
-								"0"
-							);
-							const yyyy = date.getFullYear();
-							return `${dd}-${mm}-${yyyy}`;
-						}
-
-						const startFormatted = formatDate(startDateVal);
-						const endFormatted = formatDate(endDateVal);
-
-						let fileNameParts = [];
-						if (query) fileNameParts.push(query);
-						if (startFormatted) fileNameParts.push(startFormatted);
-						if (endFormatted) fileNameParts.push(endFormatted);
-
-						const fileName =
-							fileNameParts.length > 0
-								? `export_${fileNameParts.join("-")}.csv`
-								: "export.csv";
-
-						let csvContent = Papa.unparse(filtered);
-						const encodedUri =
-							"data:text/csv;charset=utf-8," +
-							encodeURIComponent(csvContent);
-
-						const link = document.createElement("a");
-						link.setAttribute("href", encodedUri);
-						link.setAttribute("download", fileName);
-						document.body.appendChild(link);
-						link.click();
-						document.body.removeChild(link);
-					}
-
-					function clearCache() {
-						localStorage.removeItem("savedCSV");
-						data = [];
-						filtered = [];
-						selectedTags = [];
-						document.getElementById("cardsContainer").innerHTML =
-							"";
-						document.getElementById("tagFilterMenu").innerHTML = "";
-						document.getElementById("exportCount").textContent =
-							"0";
-						showNotification("Saved data cleared.");
-					}
-
-					function getDomain(url) {
-						try {
-							return new URL(url).hostname.replace("www.", "");
-						} catch {
-							return "";
-						}
-					}
-
-					// Funzione chiamata dopo caricamento o caricamento da cache
-					function onDataLoaded() {
-						selectedTags = [];
-						buildTagFilterMenu();
-						applyFilters();
-					}
-				</script>
-			</body>
-		</html>
-	</head>
+      <!-- Menu visivo per filtro tag -->
+      <div id="tagFilterMenu"></div>
+      <div id="cardsContainer"></div>
+      <div id="notification"></div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+      <script>
+         let data = [];
+         let filtered = [];
+         let selectedTags = [];
+         
+         function showNotification(message) {
+         	const note = document.getElementById("notification");
+         	note.textContent = message;
+         	note.style.display = "block";
+         	setTimeout(() => {
+         		note.style.display = "none";
+         	}, 3000);
+         }
+         
+         window.addEventListener("load", () => {
+         	const saved = localStorage.getItem("savedCSV");
+         	if (saved) {
+         		data = JSON.parse(saved);
+         		filtered = [...data];
+         		onDataLoaded();
+         		showNotification("Data loaded from browser.");
+         	}
+         
+         	document
+         		.getElementById("searchInput")
+         		.addEventListener("keydown", function (event) {
+         			if (event.key === "Enter") {
+         				applyFilters();
+         			}
+         		});
+         });
+         
+         document
+         	.getElementById("csvFile")
+         	.addEventListener("change", function (e) {
+         		const file = e.target.files[0];
+         		Papa.parse(file, {
+         			header: true,
+         			skipEmptyLines: true,
+         			complete: function (results) {
+         				data = results.data.filter(
+         					(row) => row.title && row.url
+         				);
+         				localStorage.setItem(
+         					"savedCSV",
+         					JSON.stringify(data)
+         				);
+         				filtered = [...data];
+         				onDataLoaded();
+         				showNotification(
+         					"CSV loaded and saved in browser."
+         				);
+         			},
+         		});
+         	});
+         
+         function buildTagFilterMenu() {
+         	const container =
+         		document.getElementById("tagFilterMenu");
+         	container.innerHTML = "";
+         
+         	const tagCounts = {};
+         
+         	data.forEach((item) => {
+         		if (!item.tags) return;
+         		const tags = item.tags
+         			.split(",")
+         			.map((t) => t.trim());
+         		tags.forEach((tag) => {
+         			tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+         		});
+         	});
+         
+         	const sortedTags = Object.keys(tagCounts).sort(
+         		(a, b) => tagCounts[b] - tagCounts[a]
+         	);
+         
+         	sortedTags.forEach((tag) => {
+         		const label = document.createElement("label");
+         		label.style.marginRight = "0px";
+         		label.style.cursor = "pointer";
+         
+         		const checkbox = document.createElement("input");
+         		checkbox.type = "checkbox";
+         		checkbox.value = tag;
+         		checkbox.checked = selectedTags.includes(tag);
+         
+         		checkbox.addEventListener("change", (e) => {
+         			const t = e.target.value;
+         			if (e.target.checked) {
+         				if (!selectedTags.includes(t))
+         					selectedTags.push(t);
+         			} else {
+         				selectedTags = selectedTags.filter(
+         					(x) => x !== t
+         				);
+         			}
+         			applyFilters();
+         		});
+         
+         		label.appendChild(checkbox);
+         		label.appendChild(
+         			document.createTextNode(
+         				` ${tag} (${tagCounts[tag]})`
+         			)
+         		);
+         		container.appendChild(label);
+         	});
+         }
+         
+         function applyFilters() {
+         	const start = new Date(
+         		document.getElementById("startDate").value
+         	);
+         	const end = new Date(
+         		document.getElementById("endDate").value
+         	);
+         	const query = document
+         		.getElementById("searchInput")
+         		.value.toLowerCase();
+         
+         	filtered = data.filter((item) => {
+         		const matchesText =
+         			!query ||
+         			(item.title &&
+         				item.title.toLowerCase().includes(query)) ||
+         			(item.excerpt &&
+         				item.excerpt.toLowerCase().includes(query));
+         
+         		const createdDate = new Date(item.created);
+         		const matchesDate =
+         			(!isNaN(start) ? createdDate >= start : true) &&
+         			(!isNaN(end) ? createdDate <= end : true);
+         
+         		let matchesTags = true;
+         		if (selectedTags.length > 0) {
+         			if (!item.tags) return false;
+         			const itemTags = item.tags
+         				.split(",")
+         				.map((t) => t.trim());
+         			matchesTags = selectedTags.every((tag) =>
+         				itemTags.includes(tag)
+         			);
+         		}
+         
+         		return matchesText && matchesDate && matchesTags;
+         	});
+         
+         	renderCards(filtered);
+         	showNotification(
+         		selectedTags.length > 0
+         			? `Filtrate per tag: ${selectedTags.join(", ")}`
+         			: "Filtro tag disattivato"
+         	);
+         
+         	document.getElementById("exportCount").textContent =
+         		filtered.length;
+         }
+         
+         function renderCards(dataset) {
+         	const container =
+         		document.getElementById("cardsContainer");
+         	container.innerHTML = "";
+         
+         	dataset.sort(
+         		(a, b) => new Date(b.created) - new Date(a.created)
+         	);
+         
+         	dataset.forEach((item) => {
+         		const card = document.createElement("a");
+         		card.className = "card";
+         		card.href = item.url;
+         		card.target = "_blank";
+         
+         		const dateObj = item.created
+         			? new Date(item.created)
+         			: null;
+         		const formattedDate = dateObj
+         			? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString(
+         					[],
+         					{
+         						hour: "2-digit",
+         						minute: "2-digit",
+         					}
+         			  )}`
+         			: "n.d.";
+         		const domain = getDomain(item.url);
+         
+         		const tagsArray =
+         			typeof item.tags === "string"
+         				? item.tags.split(",").map((t) => t.trim())
+         				: [];
+         
+         		const tagsHTML = tagsArray
+         			.map((tag) => {
+         				const color = generateTagColor(tag);
+         				// Evidenzia tag selezionati
+         				const selectedClass = selectedTags.includes(
+         					tag
+         				)
+         					? "selected-tag"
+         					: "";
+         				return `<span class="badge clickable ${selectedClass}" style="background-color: ${color}; color: #000;">${tag}</span>`;
+         			})
+         			.join(" ");
+         
+         		card.innerHTML = `
+          <div class="image-container">
+            <img src="${
+         item.cover || "https://via.placeholder.com/250x140"
+         }" alt="${item.title}" loading="lazy">
+          </div>
+          <div class="card-content">
+            <div class="badges-row">
+              <span class="badge date-badge">${formattedDate}</span>
+              <span class="badge source">${domain}</span>
+              ${tagsHTML}
+            </div>
+            <h3>${item.title}</h3>
+            <p>${item.excerpt || ""}</p>
+          </div>`;
+         
+         		container.appendChild(card);
+         	});
+         
+         	// Listener per i badge cliccabili (filtro tag da card)
+         	document
+         		.querySelectorAll(".badge.clickable")
+         		.forEach((badge) => {
+         			badge.addEventListener("click", (event) => {
+         				event.preventDefault();
+         				event.stopPropagation();
+         				const tag = badge.textContent.trim();
+         
+         				// Toggle selezione tag nel menu
+         				const index = selectedTags.indexOf(tag);
+         				if (index === -1) {
+         					selectedTags.push(tag);
+         				} else {
+         					selectedTags.splice(index, 1);
+         				}
+         				buildTagFilterMenu();
+         				applyFilters();
+         			});
+         		});
+         
+         	document.getElementById("exportCount").textContent =
+         		dataset.length;
+         }
+         
+         const tagColors = {};
+         
+         function generateTagColor(tag) {
+         	if (!tagColors[tag]) {
+         		const hue = Math.floor(Math.random() * 360);
+         		tagColors[tag] = `hsl(${hue}, 70%, 80%)`;
+         	}
+         	return tagColors[tag];
+         }
+         
+         function exportResults() {
+         	const queryRaw = document
+         		.getElementById("searchInput")
+         		.value.trim();
+         	const query = queryRaw.replace(/\s+/g, "");
+         	const startDateVal =
+         		document.getElementById("startDate").value;
+         	const endDateVal =
+         		document.getElementById("endDate").value;
+         
+         	function formatDate(d) {
+         		if (!d) return "";
+         		const date = new Date(d);
+         		if (isNaN(date)) return "";
+         		const dd = String(date.getDate()).padStart(2, "0");
+         		const mm = String(date.getMonth() + 1).padStart(
+         			2,
+         			"0"
+         		);
+         		const yyyy = date.getFullYear();
+         		return `${dd}-${mm}-${yyyy}`;
+         	}
+         
+         	const startFormatted = formatDate(startDateVal);
+         	const endFormatted = formatDate(endDateVal);
+         
+         	let fileNameParts = [];
+         	if (query) fileNameParts.push(query);
+         	if (startFormatted) fileNameParts.push(startFormatted);
+         	if (endFormatted) fileNameParts.push(endFormatted);
+         
+         	const fileName =
+         		fileNameParts.length > 0
+         			? `export_${fileNameParts.join("-")}.csv`
+         			: "export.csv";
+         
+         	let csvContent = Papa.unparse(filtered);
+         	const encodedUri =
+         		"data:text/csv;charset=utf-8," +
+         		encodeURIComponent(csvContent);
+         
+         	const link = document.createElement("a");
+         	link.setAttribute("href", encodedUri);
+         	link.setAttribute("download", fileName);
+         	document.body.appendChild(link);
+         	link.click();
+         	document.body.removeChild(link);
+         }
+         
+         function clearCache() {
+         	localStorage.removeItem("savedCSV");
+         	data = [];
+         	filtered = [];
+         	selectedTags = [];
+         	document.getElementById("cardsContainer").innerHTML =
+         		"";
+         	document.getElementById("tagFilterMenu").innerHTML = "";
+         	document.getElementById("exportCount").textContent =
+         		"0";
+         	showNotification("Saved data cleared.");
+         }
+         
+         function getDomain(url) {
+         	try {
+         		return new URL(url).hostname.replace("www.", "");
+         	} catch {
+         		return "";
+         	}
+         }
+         
+         // Funzione chiamata dopo caricamento o caricamento da cache
+         function onDataLoaded() {
+         	selectedTags = [];
+         	buildTagFilterMenu();
+         	applyFilters();
+         }
+      </script>
+   </body>
 </html>
