@@ -121,6 +121,14 @@
       color: #aaa;
     }
 
+    .badges-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 6px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+
     .badge {
       font-size: 12px;
       color: #bbb;
@@ -130,6 +138,7 @@
       border-radius: 3px;
       display: inline-block;
       align-self: flex-start;
+      white-space: nowrap;
     }
 
     .badge.source {
@@ -207,34 +216,6 @@
         width: 100%;
       }
     }
-
-    @media (max-width: 480px) {
-      .card-content h3 {
-        font-size: 16px;
-      }
-
-      .card-content p {
-        font-size: 13px;
-      }
-
-      input,
-      button,
-      .icon-button {
-        font-size: 14px;
-        padding: 8px;
-        height: 38px;
-      }
-
-      .badge {
-        font-size: 11px;
-        padding: 3px 5px;
-      }
-
-      .icon {
-        width: 16px;
-        height: 16px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -247,16 +228,14 @@
     </div>
     <button onclick="applyDateFilter()">Go</button>
     <button class="icon-button" onclick="exportResults()" title="Export results">
-      <svg class="icon" viewBox="0 0 24 24"
-        ><path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z" />
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M5 20h14v-2H5v2zm7-18l-7 7h4v6h6v-6h4l-7-7z" />
       </svg>
       <span id="exportCount">0</span>
     </button>
     <button class="icon-button" onclick="clearCache()" title="Clear saved data">
-      <svg class="icon" viewBox="0 0 24 24"
-        ><path
-          d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z"
-        />
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M3 6h18v2H3V6zm2 3h14l-1.5 12.5H6.5L5 9zm5 2v8h2v-8h-2zm4 0v8h2v-8h-2z" />
       </svg>
     </button>
   </div>
@@ -284,8 +263,15 @@
         data = JSON.parse(saved);
         filtered = [...data];
         renderCards(filtered);
-        showNotification("Dati caricati dal browser.");
+        showNotification("Data loaded from browser.");
       }
+
+      // NEW: enable Enter key to trigger search
+      document.getElementById("searchInput").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          applyDateFilter();
+        }
+      });
     });
 
     document.getElementById("csvFile").addEventListener("change", function (e) {
@@ -298,7 +284,7 @@
           localStorage.setItem("savedCSV", JSON.stringify(data));
           filtered = [...data];
           renderCards(filtered);
-          showNotification("CSV caricato e salvato nel browser.");
+          showNotification("CSV loaded and saved in browser.");
         },
       });
     });
@@ -347,8 +333,10 @@
           }" alt="${item.title}" loading="lazy">
         </div>
         <div class="card-content">
-          <span class="badge">${formattedDate}</span>
-          <span class="badge source">${domain}</span>
+          <div class="badges-row">
+            <span class="badge">${formattedDate}</span>
+            <span class="badge source">${domain}</span>
+          </div>
           <h3>${item.title}</h3>
           <p>${item.excerpt || ""}</p>
         </div>`;
@@ -358,6 +346,34 @@
     }
 
     function exportResults() {
+      const queryRaw = document.getElementById("searchInput").value.trim();
+      const query = queryRaw.replace(/\s+/g, "");
+      const startDateVal = document.getElementById("startDate").value;
+      const endDateVal = document.getElementById("endDate").value;
+
+      function formatDate(d) {
+        if (!d) return "";
+        const date = new Date(d);
+        if (isNaN(date)) return "";
+        const dd = String(date.getDate()).padStart(2, "0");
+        const mm = String(date.getMonth() + 1).padStart(2, "0");
+        const yyyy = date.getFullYear();
+        return `${dd}-${mm}-${yyyy}`;
+      }
+
+      const startFormatted = formatDate(startDateVal);
+      const endFormatted = formatDate(endDateVal);
+
+      let fileNameParts = [];
+      if (query) fileNameParts.push(query);
+      if (startFormatted) fileNameParts.push(startFormatted);
+      if (endFormatted) fileNameParts.push(endFormatted);
+
+      const fileName =
+        fileNameParts.length > 0
+          ? fileNameParts.join("_") + ".csv"
+          : "search_results.csv";
+
       const csvContent = [
         ["title", "url", "created"],
         ...filtered.map((item) => [item.title, item.url, item.created]),
@@ -368,7 +384,7 @@
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const link = document.createElement("a");
       link.href = URL.createObjectURL(blob);
-      link.download = "risultati_ricerca.csv";
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -376,15 +392,17 @@
 
     function clearCache() {
       localStorage.removeItem("savedCSV");
-      showNotification("Cache cancellata.");
-      location.reload();
+      data = [];
+      filtered = [];
+      document.getElementById("cardsContainer").innerHTML = "";
+      showNotification("Saved data cleared.");
     }
 
     function getDomain(url) {
       try {
         return new URL(url).hostname.replace("www.", "");
       } catch {
-        return "unknown";
+        return "";
       }
     }
   </script>
