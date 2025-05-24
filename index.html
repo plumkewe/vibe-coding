@@ -385,19 +385,6 @@
             showNotification(selectionMode ? "Selection mode ON" : "Selection mode OFF");
          }
          
-         function cardClickHandler(e) {
-            if (selectionMode) {
-               const card = e.currentTarget;
-               card.classList.toggle("selected");
-               const url = card.href;
-               if (selectedItems.has(url)) {
-                  selectedItems.delete(url);
-               } else {
-                  selectedItems.add(url);
-               }
-               updateExportCount();
-            }
-         }
          
          function showNotification(message) {
             const note = document.getElementById("notification");
@@ -550,19 +537,6 @@
             );
             
             updateExportCount();
-         }
-         
-         function copyToClipboard(text) {
-            if (navigator.clipboard && window.isSecureContext) {
-               navigator.clipboard.writeText(text)
-               .then(() => showNotification("Copiato negli appunti!"))
-               .catch(err => {
-                  console.error("Clipboard API error:", err);
-                  fallbackCopyText(text);
-               });
-            } else {
-               fallbackCopyText(text);
-            }
          }
          
          function fallbackCopyText(text) {
@@ -827,51 +801,12 @@
             }
          }
          
-         function downloadBlob(blob, filename) {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-         }
-
-         
-         function downloadCSV(csvContent, fileName) {
-            const encodedUri =
-            "data:text/csv;charset=utf-8," +
-            encodeURIComponent(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", fileName);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-         }
-         
          function handleOutsideClick(event) {
             const menu = document.getElementById("exportMenu");
             if (!menu.contains(event.target)) {
                menu.classList.add("hidden");
                document.removeEventListener("click", handleOutsideClick);
             }
-         }
-
-         
-         function extractCardData(card) {
-            return {
-               title: card.querySelector("h3")?.textContent || "",
-               url: card.href,
-               excerpt:
-               card.querySelector("p")?.textContent || "",
-               tags: Array.from(
-                  card.querySelectorAll(".badge.clickable")
-               )
-               .map((b) => b.textContent)
-               .join(", "),
-               created: card.querySelector(".date-badge")
-               ?.textContent || "",
-            };
          }
          
          function getDomain(url) {
@@ -882,6 +817,16 @@
                return "";
             }
          }
+         
+         function clearCache() {
+            localStorage.removeItem("savedCSV");  // Rimuove solo i dati CSV salvati
+            selectedItems.clear();                 // Pulisce eventuali selezioni
+            selectedTags = [];                    // Pulisce i filtri tag selezionati
+            filtered = [...data];                 // Ripristina il filtro completo
+            onDataLoaded();                      // Aggiorna interfaccia e dati
+            showNotification("Cache cancellata.");
+         }
+
          
          function onDataLoaded() {
             buildTagFilterMenu();
