@@ -466,6 +466,24 @@
           width: 100%;
         }
 
+        #fileClearContainer {
+          display: flex;
+          flex-direction: row;
+          width: 100%; /* Full width of #controls */
+          max-width: none; /* Explicitly remove max-width */
+          gap: 9px;
+        }
+        
+        #fileClearContainer input#csvFile {
+          width: auto; /* Let flex-grow control width */
+          max-width: none; /* Remove max-width */
+        }
+        
+        #fileClearContainer button#clearCacheButton {
+          width: 50px; /* Fixed width */
+          flex-shrink: 0;
+        }
+        
         #date-range input {
           flex: 1 1 50%;
           min-width: 0;
