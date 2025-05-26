@@ -103,7 +103,7 @@
         flex-wrap: wrap;
         justify-content: center;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         margin-bottom: 20px;
       }
 
@@ -123,31 +123,20 @@
         flex-wrap: wrap;
         gap: 16px;
         justify-content: center;
-        transition: all 0.3s ease-in-out;
       }
       
       .card {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.4s ease, transform 0.4s ease;
-        will-change: transform, opacity;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        flex: 1 1 250px;
-        min-width: 250px;
-        max-width: 100%;
+        flex: 1 1 250px;  /* <-- flex-grow:1, flex-shrink:1, base width 250px */
+        min-width: 250px; /* <-- la larghezza base */
+        max-width: 100%;  /* <-- non più larga del contenitore */
         display: flex;
         flex-direction: column;
         text-decoration: none;
         color: inherit;
-        box-shadow: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, width 0.3s ease;
       }
-      
-      .card.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
       .card:hover {
         transform: translateY(-4px);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* leggero effetto */
@@ -276,12 +265,9 @@
       }
       
       #exportCount {
-        display: inline-block;          /* rende possibile fissare la larghezza */
-        width: 3ch;                     /* spazio per 3 cifre (“300”) */
-        text-align: center;             /* centra il numero nell’area */
-        font-variant-numeric: tabular-nums; /* usa cifre monospazio */
-        /* opzionale: previeni overflow nel caso di >3 cifre */
-        overflow: hidden;
+        display: inline-block;
+        min-width: auto; /* Spazio sufficiente per numeri fino a 9999 */
+        text-align: center;
       }
 
       #searchGoContainer {
@@ -289,9 +275,7 @@
         align-items: center;
         gap: 8px;
         flex-grow: 1;
-        /* opzionale, se vuoi che si allarghi in base allo spazio disponibile */
         min-width: 0;
-        /* evita overflow */
       }
 
       #searchGoContainer input#searchInput {
@@ -329,22 +313,23 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        flex-grow: 1;
+        flex-shrink: 0;
         min-width: 0;
         height: 42px;
         box-sizing: border-box;
-        max-width: 200px; /* limita larghezza input file */
+        max-width: 200px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
+
 
       #fileClearContainer input#csvFile {
         flex-grow: 1;
         min-width: 0;
         height: 42px;
         box-sizing: border-box;
-        max-width: 200px; /* limita larghezza input file */
+        max-width: 140px; /* limita larghezza input file */
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -487,6 +472,7 @@
           width: 100%;
         }
 
+        
         #fileClearContainer {
           display: flex;
           flex-direction: row;
@@ -543,7 +529,10 @@
   <body>
     <div id="controls">
       <div id="fileClearContainer">
-        <input type="file" id="csvFile" accept=".csv" />
+        <input accept=".csv" id="csvFile" type="file" style="display: none;" />
+        <button id="uploadCSVButton" class="icon-button" title="Carica CSV">
+          <span class="material-symbols-outlined">upload</span>
+        </button>
         <button onclick="clearCache()" id="clearCacheButton" title="Clear saved data">
           <span class="material-symbols-outlined">radio_button_unchecked</span>
         </button>
@@ -651,7 +640,14 @@
           header: true,
           skipEmptyLines: true,
           complete: function(results) {
-            data = results.data.filter((row) => row.title && row.url);
+            data = results.data
+            .filter((row) => row.title && row.url)
+            .map((row) => {
+              if (!row.tags || row.tags.trim() === "") {
+                row.tags = "Uncategorized";
+              }
+              return row;
+            });
             localStorage.setItem("savedCSV", JSON.stringify(data));
             filtered = [...data];
             onDataLoaded();
@@ -663,7 +659,12 @@
       window.addEventListener("load", () => {
         const saved = localStorage.getItem("savedCSV");
         if (saved) {
-          data = JSON.parse(saved);
+          data = JSON.parse(saved).map((item) => {
+            if (!item.tags || item.tags.trim() === "") {
+              item.tags = "uncategorized";
+            }
+            return item;
+          });
           filtered = [...data];
           onDataLoaded();
           showNotification("Data loaded from browser.");
@@ -723,11 +724,9 @@
           // tag
           let tagMatch = true;
           if (selectedTags.length) {
-            const its = (!item.tags || item.tags.trim() === "")
-            ? ["Uncategorized"]
-            : item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
+            if (!item.tags) return false;
+            const its = item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
             tagMatch = selectedTags.every((t) => its.includes(t));
-
           }
           // domini
           let domMatch = true;
@@ -785,27 +784,24 @@
       function getTagCounts(dataset) {
         const counts = {};
         dataset.forEach((item) => {
-          if (!item.tags || item.tags.trim() === "") {
-            counts["Uncategorized"] = (counts["Uncategorized"] || 0) + 1;
-          } else {
-            item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0).forEach((tag) => {
-              counts[tag] = (counts[tag] || 0) + 1;
-            });
-          }
+          const tags = item.tags
+          ? item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0)
+          : ["Uncategorized"];
+          if (tags.length === 0) tags.push("Uncategorized");
+          tags.forEach((tag) => {
+            counts[tag] = (counts[tag] || 0) + 1;
+          });
         });
         return counts;
       }
 
-
       function renderCards(dataset) {
         const container = document.getElementById("cardsContainer");
-        
-        // Svuota contenitore prima di reinserire
         container.innerHTML = "";
         
         dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
         
-        dataset.forEach((item, index) => {
+        dataset.forEach((item) => {
           const card = document.createElement("a");
           card.className = "card";
           if (selectedItems.has(item.url)) {
@@ -813,7 +809,6 @@
           }
           card.href = item.url;
           card.target = "_blank";
-          
           card.addEventListener("click", (e) => {
             if (!selectionMode) return;
             e.preventDefault();
@@ -837,33 +832,23 @@
           : "n.d.";
           
           const domain = getDomain(item.url);
-          const domainSpan = document.createElement("span");
-          domainSpan.className = "badge clickable source";
-          domainSpan.textContent = domain;
-          domainSpan.title = "Clicca per filtrare per dominio";
-          domainSpan.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (selectedDomains.includes(domain)) {
-              selectedDomains = selectedDomains.filter((d) => d !== domain);
-            } else {
-              selectedDomains.push(domain);
-            }
-            document.querySelectorAll("#domainFilterMenu input[type=checkbox]").forEach((cb) => {
-              if (cb.value === domain) cb.checked = selectedDomains.includes(domain);
-            });
-            applyFilters();
-          });
           
-          const tagsArray = (!item.tags || item.tags.trim() === "")
-          ? ["Uncategorized"]
-          : item.tags.split(",").map((t) => t.trim()).filter(Boolean);
+          const tagsArray =
+          typeof item.tags === "string"
+          ? item.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0)
+          : [];
           
+          // Crea container per tag con eventi cliccabili
           const tagsContainer = document.createElement("div");
           tagsContainer.className = "tags-container";
           tagsArray.forEach((tag) => {
             const tagSpan = document.createElement("span");
-            tagSpan.className = `badge clickable ${selectedTags.includes(tag) ? "selected-tag" : ""}`;
+            tagSpan.className = `badge clickable ${
+            selectedTags.includes(tag) ? "selected-tag" : ""
+            }`;
             tagSpan.textContent = tag;
             tagSpan.style.backgroundColor = generateTagColor(tag);
             tagSpan.style.color = "#000";
@@ -873,19 +858,56 @@
               event.preventDefault();
               event.stopPropagation();
               const idx = selectedTags.indexOf(tag);
-              if (idx === -1) selectedTags.push(tag);
-              else selectedTags.splice(idx, 1);
-              document.querySelectorAll("#tagFilterMenu input[type=checkbox]").forEach((cb) => {
-                if (cb.value === tag) cb.checked = selectedTags.includes(tag);
+              if (idx === -1) {
+                selectedTags.push(tag);
+              } else {
+                selectedTags.splice(idx, 1);
+              }
+              // Aggiorna checkbox filtro tag
+              document
+              .querySelectorAll("#tagFilterMenu input[type=checkbox]")
+              .forEach((cb) => {
+                if (cb.value === tag) {
+                  cb.checked = selectedTags.includes(tag);
+                }
               });
               applyFilters();
             });
             tagsContainer.appendChild(tagSpan);
           });
           
+          // Crea elemento dominio cliccabile
+          const domainSpan = document.createElement("span");
+          domainSpan.className = "badge clickable source";
+          domainSpan.textContent = domain;
+          domainSpan.title = "Clicca per filtrare per dominio";
+          domainSpan.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const domainClicked = domainSpan.textContent.trim();
+            if (selectedDomains.includes(domainClicked)) {
+              selectedDomains = selectedDomains.filter((d) => d !== domainClicked);
+            } else {
+              selectedDomains.push(domainClicked);
+            }
+            // Aggiorna checkbox filtro dominio
+            const checkboxes = document.querySelectorAll(
+              "#domainFilterMenu input[type=checkbox]"
+            );
+            checkboxes.forEach((cb) => {
+              if (cb.value === domainClicked) {
+                cb.checked = selectedDomains.includes(domainClicked);
+              }
+            });
+            applyFilters();
+          });
+          
+          // Struttura HTML aggiornata
           card.innerHTML = `
       <div class="image-container">
-        <img src="${item.cover || "https://via.placeholder.com/250x140"}" alt="${item.title}" loading="lazy">
+        <img src="${item.cover || "https://via.placeholder.com/250x140"}" alt="${
+          item.title
+          }" loading="lazy">
       </div>
       <div class="card-content">
         <div class="badges-row">
@@ -897,21 +919,23 @@
       </div>
     `;
           
-          card.querySelector(".badges-row").appendChild(domainSpan);
-          card.querySelector(".tags-row").appendChild(tagsContainer);
+          // Aggiungi dominio nella riga badges
+          const badgesRow = card.querySelector(".badges-row");
+          badgesRow.appendChild(domainSpan);
+          
+          // Aggiungi tags nella riga tags-row
+          const tagsRow = card.querySelector(".tags-row");
+          tagsRow.appendChild(tagsContainer);
           
           container.appendChild(card);
-          
-          // Ritardo per animazione a cascata
-          setTimeout(() => {
-            card.classList.add("show");
-          }, index * 50); // aumenta questo valore per rallentare la cascata
         });
         
         updateExportCount();
-      }
-
-      const tagColors = {};
+      }      const tagColors = {};
+      
+      document.getElementById("uploadCSVButton").addEventListener("click", function() {
+        document.getElementById("csvFile").click();
+      });
 
       function generateTagColor(tag) {
         if (!tagColors[tag]) {
@@ -1070,25 +1094,6 @@
           menu.appendChild(label);
         });
       }
-      
-      function bounceCount(el) {
-        el.animate([
-          { transform: 'scale(0.5)', opacity: 0 },
-          { transform: 'scale(1.1)', opacity: 1, offset: 0.7 },
-          { transform: 'scale(1)', opacity: 1 }
-        ], {
-          duration: 300,
-          easing: 'ease-out'
-        });
-      }
-      
-      function updateExportCount() {
-        const exportCountEl = document.getElementById("exportCount");
-        const newVal = selectionMode ? selectedItems.size : filtered.length;
-        exportCountEl.textContent = newVal;
-        bounceCount(exportCountEl);
-      }
-
 
       function getSelectedDomains() {
         return selectedDomains;
