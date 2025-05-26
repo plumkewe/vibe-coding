@@ -308,11 +308,14 @@
       }
 
       #fileClearContainer {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: nowrap;
+        flex-grow: 1;
         min-width: 0;
+        height: 42px;
+        box-sizing: border-box;
+        max-width: 140px; /* limita larghezza input file */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       #fileClearContainer input#csvFile {
@@ -320,6 +323,10 @@
         min-width: 0;
         height: 42px;
         box-sizing: border-box;
+        max-width: 140px; /* limita larghezza input file */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       #fileClearContainer button#clearCacheButton {
@@ -748,7 +755,9 @@
       function renderCards(dataset) {
         const container = document.getElementById("cardsContainer");
         container.innerHTML = "";
+        
         dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
+        
         dataset.forEach((item) => {
           const card = document.createElement("a");
           card.className = "card";
@@ -770,21 +779,38 @@
             }
             updateExportCount();
           });
+          
           const dateObj = item.created ? new Date(item.created) : null;
-          const formattedDate = dateObj ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "n.d.";
+          const formattedDate = dateObj
+          ? `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`
+          : "n.d.";
+          
           const domain = getDomain(item.url);
-          const tagsArray = typeof item.tags === "string" ? item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0) : [];
+          
+          const tagsArray =
+          typeof item.tags === "string"
+          ? item.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0)
+          : [];
+          
           // Crea container per tag con eventi cliccabili
           const tagsContainer = document.createElement("div");
           tagsContainer.className = "tags-container";
           tagsArray.forEach((tag) => {
             const tagSpan = document.createElement("span");
-            tagSpan.className = `badge clickable ${selectedTags.includes(tag) ? "selected-tag" : ""}`;
+            tagSpan.className = `badge clickable ${
+            selectedTags.includes(tag) ? "selected-tag" : ""
+            }`;
             tagSpan.textContent = tag;
             tagSpan.style.backgroundColor = generateTagColor(tag);
             tagSpan.style.color = "#000";
-            tagSpan.style.marginRight = "4px"; // <-- aggiunto margine
-            tagSpan.style.marginBottom = "4px"; // <-- aggiunto margine
+            tagSpan.style.marginRight = "4px";
+            tagSpan.style.marginBottom = "4px";
             tagSpan.addEventListener("click", (event) => {
               event.preventDefault();
               event.stopPropagation();
@@ -795,7 +821,9 @@
                 selectedTags.splice(idx, 1);
               }
               // Aggiorna checkbox filtro tag
-              document.querySelectorAll("#tagFilterMenu input[type=checkbox]").forEach((cb) => {
+              document
+              .querySelectorAll("#tagFilterMenu input[type=checkbox]")
+              .forEach((cb) => {
                 if (cb.value === tag) {
                   cb.checked = selectedTags.includes(tag);
                 }
@@ -804,6 +832,7 @@
             });
             tagsContainer.appendChild(tagSpan);
           });
+          
           // Crea elemento dominio cliccabile
           const domainSpan = document.createElement("span");
           domainSpan.className = "badge clickable source";
@@ -819,7 +848,9 @@
               selectedDomains.push(domainClicked);
             }
             // Aggiorna checkbox filtro dominio
-            const checkboxes = document.querySelectorAll("#domainFilterMenu input[type=checkbox]");
+            const checkboxes = document.querySelectorAll(
+              "#domainFilterMenu input[type=checkbox]"
+            );
             checkboxes.forEach((cb) => {
               if (cb.value === domainClicked) {
                 cb.checked = selectedDomains.includes(domainClicked);
@@ -827,27 +858,37 @@
             });
             applyFilters();
           });
+          
+          // Struttura HTML aggiornata
           card.innerHTML = `
-         
-			<div class="image-container">
-				<img src="${item.cover || "https://via.placeholder.com/250x140"}" alt="${item.title}" loading="lazy">
-				</div>
-				<div class="card-content">
-					<div class="badges-row">
-						<span class="badge date-badge">${formattedDate}</span>
-					</div>
-					<h3>${item.title}</h3>
-					<p>${item.excerpt || ""}</p>
-				</div>
-      `;
+      <div class="image-container">
+        <img src="${item.cover || "https://via.placeholder.com/250x140"}" alt="${
+          item.title
+          }" loading="lazy">
+      </div>
+      <div class="card-content">
+        <div class="badges-row">
+          <span class="badge date-badge">${formattedDate}</span>
+        </div>
+        <div class="tags-row"></div>
+        <h3>${item.title}</h3>
+        <p>${item.excerpt || ""}</p>
+      </div>
+    `;
+          
+          // Aggiungi dominio nella riga badges
           const badgesRow = card.querySelector(".badges-row");
           badgesRow.appendChild(domainSpan);
-          badgesRow.appendChild(tagsContainer);
+          
+          // Aggiungi tags nella riga tags-row
+          const tagsRow = card.querySelector(".tags-row");
+          tagsRow.appendChild(tagsContainer);
+          
           container.appendChild(card);
         });
+        
         updateExportCount();
-      }
-      const tagColors = {};
+      }      const tagColors = {};
 
       function generateTagColor(tag) {
         if (!tagColors[tag]) {
@@ -938,8 +979,11 @@
           copyToClipboard(urls);
           showNotification("Link copiati negli appunti.");
         }
+        // Close the export menu
+        const menu = document.getElementById("exportMenu");
+        menu.classList.add("hidden");
+        document.removeEventListener("click", handleOutsideClick);
       }
-
       function copyToClipboard(text) {
         navigator.clipboard.writeText(text).catch((err) => {
           alert("Errore durante la copia negli appunti");
