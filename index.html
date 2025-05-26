@@ -643,11 +643,13 @@
             data = results.data
             .filter((row) => row.title && row.url)
             .map((row) => {
-              if (!row.tags || row.tags.trim() === "") {
-                row.tags = "Uncategorized";
-              }
+              row.tags = row.tags && row.tags.trim() !== "" ? row.tags : "Uncategorized";
+              row.tagsArray = row.tags.split(",").map(t => t.trim());
+              row.domain = getDomain(row.url);
+              row.createdDate = new Date(row.created);
               return row;
             });
+
             localStorage.setItem("savedCSV", JSON.stringify(data));
             filtered = [...data];
             onDataLoaded();
@@ -799,16 +801,20 @@
         const container = document.getElementById("cardsContainer");
         container.innerHTML = "";
         
+        const fragment = document.createDocumentFragment();
+        
         dataset.sort((a, b) => new Date(b.created) - new Date(a.created));
         
-        dataset.forEach((item) => {
+        for (const item of dataset) {
           const card = document.createElement("a");
           card.className = "card";
+          card.href = item.url;
+          card.target = "_blank";
+          
           if (selectedItems.has(item.url)) {
             card.classList.add("selected");
           }
-          card.href = item.url;
-          card.target = "_blank";
+          
           card.addEventListener("click", (e) => {
             if (!selectionMode) return;
             e.preventDefault();
@@ -833,22 +839,64 @@
           
           const domain = getDomain(item.url);
           
-          const tagsArray =
-          typeof item.tags === "string"
-          ? item.tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter((t) => t.length > 0)
-          : [];
+          // Elementi base della card
+          const imageContainer = document.createElement("div");
+          imageContainer.className = "image-container";
+          const img = document.createElement("img");
+          img.src = item.cover || "https://via.placeholder.com/250x140";
+          img.alt = item.title;
+          img.loading = "lazy";
+          imageContainer.appendChild(img);
           
-          // Crea container per tag con eventi cliccabili
+          const cardContent = document.createElement("div");
+          cardContent.className = "card-content";
+          
+          // Badges row
+          const badgesRow = document.createElement("div");
+          badgesRow.className = "badges-row";
+          
+          const dateBadge = document.createElement("span");
+          dateBadge.className = "badge date-badge";
+          dateBadge.textContent = formattedDate;
+          badgesRow.appendChild(dateBadge);
+          
+          const domainSpan = document.createElement("span");
+          domainSpan.className = "badge clickable source";
+          domainSpan.textContent = domain;
+          domainSpan.title = "Clicca per filtrare per dominio";
+          domainSpan.addEventListener("click", (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const domainClicked = domainSpan.textContent.trim();
+            if (selectedDomains.includes(domainClicked)) {
+              selectedDomains = selectedDomains.filter((d) => d !== domainClicked);
+            } else {
+              selectedDomains.push(domainClicked);
+            }
+            document.querySelectorAll("#domainFilterMenu input[type=checkbox]").forEach((cb) => {
+              if (cb.value === domainClicked) {
+                cb.checked = selectedDomains.includes(domainClicked);
+              }
+            });
+            applyFilters();
+          });
+          badgesRow.appendChild(domainSpan);
+          
+          // Tags
+          const tagsRow = document.createElement("div");
+          tagsRow.className = "tags-row";
+          
           const tagsContainer = document.createElement("div");
           tagsContainer.className = "tags-container";
-          tagsArray.forEach((tag) => {
+          
+          const tagsArray =
+          typeof item.tags === "string"
+          ? item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0)
+          : [];
+          
+          for (const tag of tagsArray) {
             const tagSpan = document.createElement("span");
-            tagSpan.className = `badge clickable ${
-            selectedTags.includes(tag) ? "selected-tag" : ""
-            }`;
+            tagSpan.className = `badge clickable ${selectedTags.includes(tag) ? "selected-tag" : ""}`;
             tagSpan.textContent = tag;
             tagSpan.style.backgroundColor = generateTagColor(tag);
             tagSpan.style.color = "#000";
@@ -863,7 +911,6 @@
               } else {
                 selectedTags.splice(idx, 1);
               }
-              // Aggiorna checkbox filtro tag
               document
               .querySelectorAll("#tagFilterMenu input[type=checkbox]")
               .forEach((cb) => {
@@ -874,64 +921,34 @@
               applyFilters();
             });
             tagsContainer.appendChild(tagSpan);
-          });
+          }
           
-          // Crea elemento dominio cliccabile
-          const domainSpan = document.createElement("span");
-          domainSpan.className = "badge clickable source";
-          domainSpan.textContent = domain;
-          domainSpan.title = "Clicca per filtrare per dominio";
-          domainSpan.addEventListener("click", (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const domainClicked = domainSpan.textContent.trim();
-            if (selectedDomains.includes(domainClicked)) {
-              selectedDomains = selectedDomains.filter((d) => d !== domainClicked);
-            } else {
-              selectedDomains.push(domainClicked);
-            }
-            // Aggiorna checkbox filtro dominio
-            const checkboxes = document.querySelectorAll(
-              "#domainFilterMenu input[type=checkbox]"
-            );
-            checkboxes.forEach((cb) => {
-              if (cb.value === domainClicked) {
-                cb.checked = selectedDomains.includes(domainClicked);
-              }
-            });
-            applyFilters();
-          });
-          
-          // Struttura HTML aggiornata
-          card.innerHTML = `
-      <div class="image-container">
-        <img src="${item.cover || "https://via.placeholder.com/250x140"}" alt="${
-          item.title
-          }" loading="lazy">
-      </div>
-      <div class="card-content">
-        <div class="badges-row">
-          <span class="badge date-badge">${formattedDate}</span>
-        </div>
-        <div class="tags-row"></div>
-        <h3>${item.title}</h3>
-        <p>${item.excerpt || ""}</p>
-      </div>
-    `;
-          
-          // Aggiungi dominio nella riga badges
-          const badgesRow = card.querySelector(".badges-row");
-          badgesRow.appendChild(domainSpan);
-          
-          // Aggiungi tags nella riga tags-row
-          const tagsRow = card.querySelector(".tags-row");
           tagsRow.appendChild(tagsContainer);
           
-          container.appendChild(card);
-        });
+          // Titolo ed excerpt
+          const title = document.createElement("h3");
+          title.textContent = item.title;
+          
+          const excerpt = document.createElement("p");
+          excerpt.textContent = item.excerpt || "";
+          
+          // Assembla la card
+          cardContent.appendChild(badgesRow);
+          cardContent.appendChild(tagsRow);
+          cardContent.appendChild(title);
+          cardContent.appendChild(excerpt);
+          
+          card.appendChild(imageContainer);
+          card.appendChild(cardContent);
+          
+          fragment.appendChild(card);
+        }
         
+        container.appendChild(fragment);
         updateExportCount();
-      }      const tagColors = {};
+      }
+
+      const tagColors = {};
       
       document.getElementById("uploadCSVButton").addEventListener("click", function() {
         document.getElementById("csvFile").click();
