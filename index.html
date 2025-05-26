@@ -276,7 +276,7 @@
 
          #fileClearContainer button#clearCacheButton {
             flex-shrink: 0;
-            width: 42px; /* come il pulsante icona */
+            width: 50px; /* come il pulsante icona */
             height: 42px;
             padding: 0;
             background: #222;
@@ -389,8 +389,8 @@
             width: 16px;
             height: 16px;
             cursor: pointer;
-
-         @media (max-width: 768px) {
+         }
+         @media (max-width: 900px) {
          #controls {
          flex-direction: column;
          align-items: stretch;
@@ -409,36 +409,7 @@
          }
          .card {
          width: 100%;
-         }
-         }
-            @media (hover: none), (pointer: coarse) {
-               button:hover,
-               .card:hover,
-               .export-menu button:hover,
-               #tagFilterMenu label:hover,
-               #domainFilterMenu label:hover,
-               .icon-button:hover {
-                  background-color: unset !important;
-                  color: unset !important;
-                  cursor: default !important;
-               }
-
-               /* Disabilita le transizioni/animazioni hover */
-               button,
-               .card,
-               .export-menu button,
-               #tagFilterMenu label,
-               #domainFilterMenu label,
-               .icon-button {
-                  transition: none !important;
-               }
-
-               /* Disabilita trasformazioni al :hover */
-               .card:hover {
-                  transform: none !important;
-                  box-shadow: none !important;
-               }
-            }
+         }}
       </style>
    </head>
    <body>
