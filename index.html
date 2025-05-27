@@ -20,6 +20,7 @@
         font-family: "Segoe UI", sans-serif;
         margin: 0;
         padding: 20px;
+        user-select: none;
       }
       
       input,
@@ -1082,7 +1083,7 @@
         domainsWithCounts.forEach(([domain, count]) => {
           const label = document.createElement("label");
           label.style.cursor = "pointer";
-          label.style.display = "block";
+          label.style.marginRight = "0px";
           
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
