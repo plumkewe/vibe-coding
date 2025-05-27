@@ -13,7 +13,7 @@
         --accent: #00bcd4;
         --border-color: #444;
       }
-
+      
       body {
         background-color: var(--bg-color);
         color: var(--text-color);
@@ -21,9 +21,10 @@
         margin: 0;
         padding: 20px;
       }
-
+      
       input,
-      button {
+      button,
+      .icon-button {
         background: #222;
         color: var(--text-color);
         border: 1px solid var(--border-color);
@@ -33,33 +34,35 @@
         outline: none;
         box-sizing: border-box;
         height: 42px;
-      }
-
-      button:hover {
-        background-color: var(--accent);
-        color: #000;
         cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
       }
-
-      .selected-button {
+      
+      button:hover,
+      .export-menu button:hover,
+      .icon-button:hover {
         background-color: var(--accent);
         color: #000;
       }
-
+      
+      .selected-button,
+      .icon-button.selected-button {
+        background-color: var(--accent);
+        color: #000;
+      }
+      
       /* Container */
       .export-dropdown-container {
         position: relative;
       }
-
-      /* Menu base */
+      
+      /* Export menu */
       .export-menu {
         position: absolute;
         top: 100%;
         right: 0;
         background: var(--card-bg);
-        /* sfondo scuro */
         color: var(--text-color);
-        /* testo chiaro */
         border: 1px solid var(--border-color);
         border-radius: 6px;
         padding: 8px;
@@ -70,34 +73,31 @@
         min-width: 140px;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
       }
-
-      /* Pulsanti del menu */
+      
       .export-menu button {
         background: transparent;
         color: var(--text-color);
         border: none;
         text-align: left;
         padding: 6px 10px;
-        cursor: pointer;
         font-size: 14px;
         border-radius: 4px;
       }
-
-      .export-menu button:hover {
-        background: var(--accent);
-        color: #000;
-      }
-
-      /* Nascondi/mostra */
+      
       .hidden {
         display: none;
       }
-
+      
+      #tagFilterMenu.hidden,
+      #domainFilterMenu.hidden {
+        display: none;
+      }
+      
       #exportMenu {
         position: absolute;
         z-index: 999;
       }
-
+      
       #controls {
         display: flex;
         flex-wrap: wrap;
@@ -106,18 +106,24 @@
         gap: 8px;
         margin-bottom: 20px;
       }
-
+      
       #date-range {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         width: auto;
       }
-
+      
       #date-range input {
         width: auto;
         min-width: 120px;
       }
-
+      
+      #exportSelectResetContainer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
       #cardsContainer {
         display: flex;
         flex-wrap: wrap;
@@ -128,28 +134,28 @@
       .card {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        flex: 1 1 250px;  /* <-- flex-grow:1, flex-shrink:1, base width 250px */
-        min-width: 250px; /* <-- la larghezza base */
-        max-width: 100%;  /* <-- non più larga del contenitore */
+        flex: 1 1 250px;
+        min-width: 250px;
+        max-width: 100%;
         display: flex;
         flex-direction: column;
         text-decoration: none;
         color: inherit;
         transition: transform 0.2s ease, box-shadow 0.2s ease, width 0.3s ease;
       }
+      
       .card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* leggero effetto */
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
       }
-
+      
       .card .image-container {
         position: relative;
         width: 100%;
-        padding-top: 56.25%;
-        /* 16:9 */
+        padding-top: 56.25%; /* 16:9 */
         overflow: hidden;
       }
-
+      
       .card .image-container img {
         position: absolute;
         top: 0;
@@ -160,42 +166,40 @@
         display: block;
         margin: 0;
       }
-
+      
       .card-content {
         padding: 10px;
         display: flex;
         flex-direction: column;
         gap: 6px;
       }
-
+      
       .card-content h3 {
         margin: 0;
         font-size: 18px;
         font-weight: 700;
         color: #fff;
       }
-
+      
       .card-content p {
         margin: 0;
         font-size: 14px;
         color: #aaa;
       }
-
+      
       .card.selected {
         border-color: gray;
       }
-
+      
       .badges-row {
         display: flex;
         gap: 10px;
         margin-bottom: 6px;
         flex-wrap: wrap;
-        /* permette ai tag di andare a capo */
         align-items: center;
         overflow: hidden;
-        /* evita overflow esterno */
       }
-
+      
       .badge {
         font-size: 12px;
         color: #bbb;
@@ -211,53 +215,30 @@
         box-sizing: border-box;
         vertical-align: middle;
         white-space: nowrap;
-        /* NON spezzare il testo dentro il badge */
       }
-
+      
       .badge.date-badge {
         white-space: nowrap;
-        /* la data non va mai a capo */
       }
-
+      
       .badge.source {
-        /* Stile uguale al badge data ma con colori grigio più chiari */
         background-color: #555;
-        /* grigio più chiaro di #222 */
         color: #ddd;
-        /* testo grigio chiaro */
         border-color: #777;
         font-weight: 500;
       }
-
+      
       .icon-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 10px 14px;
-        font-size: 16px;
-        background: #222;
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        gap: 6px;
-        height: 42px;
+        gap: 8px;
         width: auto;
         min-width: 42px;
-        box-sizing: border-box;
-        cursor: pointer;
         user-select: none;
         transition: background-color 0.3s ease, color 0.3s ease;
       }
-
-      .icon-button:hover {
-        background-color: var(--accent);
-      }
-
-      .icon-button.selected-button {
-        background-color: var(--accent);
-        color: #000;
-      }
-
+      
       .icon {
         width: 18px;
         height: 18px;
@@ -266,10 +247,10 @@
       
       #exportCount {
         display: inline-block;
-        min-width: auto; /* Spazio sufficiente per numeri fino a 9999 */
+        min-width: auto;
         text-align: center;
       }
-
+      
       #searchGoContainer {
         display: flex;
         align-items: center;
@@ -277,38 +258,22 @@
         flex-grow: 1;
         min-width: 0;
       }
-
+      
       #searchGoContainer input#searchInput {
         flex-grow: 1;
         min-width: 0;
-        /* molto importante per flexbox */
         height: 42px;
-        /* mantenere altezza coerente con gli altri input */
         box-sizing: border-box;
       }
-
+      
       #searchGoContainer button {
         flex-shrink: 0;
         width: 50px;
-        /* larghezza fissa per il bottone Go */
         min-width: auto;
-        height: 42px;
         padding: 0 12px;
-        font-size: 16px;
         border-radius: 4px;
-        cursor: pointer;
-        background: #222;
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        outline: none;
-        transition: background-color 0.2s ease, color 0.2s ease;
       }
-
-      #searchGoContainer button:hover {
-        background-color: var(--accent);
-        color: #000;
-      }
-
+      
       #fileClearContainer {
         display: flex;
         gap: 8px;
@@ -322,41 +287,28 @@
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-
-
+      
       #fileClearContainer input#csvFile {
         flex-grow: 1;
         min-width: 0;
         height: 42px;
         box-sizing: border-box;
-        max-width: 140px; /* limita larghezza input file */
+        max-width: 140px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-
+      
       #fileClearContainer button#clearCacheButton {
         flex-shrink: 0;
         width: 50px;
-        /* come il pulsante icona */
-        height: 42px;
         padding: 0;
-        background: #222;
-        color: var(--text-color);
-        border: 1px solid var(--border-color);
-        border-radius: 4px;
-        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background-color 0.2s ease, color 0.2s ease;
+        border-radius: 4px;
       }
-
-      #fileClearContainer button#clearCacheButton:hover {
-        background-color: var(--accent);
-        color: #000;
-      }
-
+      
       #notification {
         position: fixed;
         bottom: 20px;
@@ -370,8 +322,9 @@
         z-index: 1000;
         border: 1px solid #444;
       }
-
-      #tagFilterMenu {
+      
+      #tagFilterMenu,
+      #domainFilterMenu {
         margin: 10px 0 20px 0;
         padding: 10px;
         border: 1px solid var(--border-color);
@@ -385,50 +338,8 @@
         flex-wrap: wrap;
         gap: 10px;
       }
-
-      #tagFilterMenu label {
-        cursor: pointer;
-        user-select: none;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 8px;
-        background-color: #222;
-        border: 1px solid #444;
-        border-radius: 4px;
-        transition: background-color 0.2s ease,
-          border-color 0.2s ease;
-        color: var(--text-color);
-        margin: 5px;
-      }
-
-      #tagFilterMenu label:hover {
-        background-color: var(--accent);
-        color: #000;
-        border-color: var(--accent);
-      }
-
-      #tagFilterMenu input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        cursor: pointer;
-      }
-
-      #domainFilterMenu {
-        margin-bottom: 20px;
-        padding: 10px;
-        border: 1px solid var(--border-color);
-        background-color: var(--card-bg);
-        color: var(--text-color);
-        font-size: 14px;
-        max-height: 120px;
-        overflow-y: auto;
-        border-radius: 6px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
+      
+      #tagFilterMenu label,
       #domainFilterMenu label {
         cursor: pointer;
         user-select: none;
@@ -443,51 +354,95 @@
         color: var(--text-color);
         margin: 5px;
       }
-
+      
+      #tagFilterMenu label:hover,
       #domainFilterMenu label:hover {
         background-color: var(--accent);
         color: #000;
         border-color: var(--accent);
       }
-
+      
+      #tagFilterMenu input[type="checkbox"],
       #domainFilterMenu input[type="checkbox"] {
         width: 16px;
         height: 16px;
         cursor: pointer;
       }
-
+      
+      @media (hover: none) {
+        /* Disattiva effetti hover su tutti gli elementi interattivi */
+        button:hover,
+        .export-menu button:hover,
+        .icon-button:hover,
+        .card:hover,
+        #tagFilterMenu label:hover,
+        #domainFilterMenu label:hover {
+          background-color: initial !important;
+          color: inherit !important;
+          border-color: inherit !important;
+          box-shadow: none !important;
+          transform: none !important;
+          cursor: default !important;
+        }
+        
+        /* Rimuove le transizioni che reagiscono al :hover */
+        button,
+        .icon-button,
+        .card,
+        #tagFilterMenu label,
+        #domainFilterMenu label {
+          transition: none !important;
+        }
+      }
+      
       @media (max-width: 900px) {
         #controls {
           flex-direction: column;
           align-items: stretch;
         }
-
+        
         input,
         button,
         .icon-button {
           width: 100%;
         }
-
+        
         #date-range {
           width: 100%;
         }
-
         
         #fileClearContainer {
           display: flex;
           flex-direction: row;
-          width: 100%; /* Full width of #controls */
-          max-width: none; /* Explicitly remove max-width */
+          width: 100%;
+          max-width: none;
           gap: 8px;
         }
         
         #fileClearContainer input#csvFile {
-          width: auto; /* Let flex-grow control width */
-          max-width: none; /* Remove max-width */
+          width: auto;
+          max-width: none;
+        }
+        
+        #exportSelectResetContainer > .export-dropdown-container {
+          flex-grow: 1;
+        }
+        
+        #exportSelectResetContainer > .export-dropdown-container > button.icon-button {
+          width: 100% !important;
+          min-width: 0 !important;
+          justify-content: flex-start; 
+          gap: 6px;
+        }
+        
+        #toggleSelectButton,
+        #resetButton {
+          width: 50px;
+          flex-shrink: 0;
         }
         
         #fileClearContainer button#clearCacheButton {
-          width: 50px; /* Fixed width */
+          width: 50px;
           flex-shrink: 0;
         }
         
@@ -495,32 +450,9 @@
           flex: 1 1 50%;
           min-width: 0;
         }
-
+        
         .card {
           width: 100%;
-          /* Disabilita animazioni e hover su mobile */
-          transition: none !important;
-        }
-
-        /* Disabilita hover su pulsanti e card */
-        button:hover,
-        .export-menu button:hover,
-        .icon-button:hover,
-        .card:hover,
-        #tagFilterMenu label:hover,
-        #domainFilterMenu label:hover {
-          background-color: transparent !important;
-          color: inherit !important;
-          cursor: default !important;
-          box-shadow: none !important;
-          transform: none !important;
-        }
-
-        /* Rimuove transizioni da altri elementi con hover */
-        button,
-        .icon-button,
-        #tagFilterMenu label,
-        #domainFilterMenu label {
           transition: none !important;
         }
       }
@@ -546,21 +478,27 @@
         <input type="date" id="endDate" title="To date" />
       </div>
       <!--     -->
-      <div class="export-dropdown-container">
-        <button class="icon-button" onclick="toggleExportMenu(event)" title="Export results">
-          <span class="material-symbols-outlined">download</span>
-          <span id="exportCount">0</span>
-        </button>
-        <div id="exportMenu" class="hidden export-menu">
-          <button onclick="exportResults('csv')">CSV</button>
-          <button onclick="exportResults('markdown')">Markdown</button>
-          <button onclick="exportResults('text')">Solo URL</button>
+      <div id="exportSelectResetContainer">
+        <div class="export-dropdown-container">
+          <button class="icon-button" onclick="toggleExportMenu(event)" title="Export results">
+            <span class="material-symbols-outlined">download</span>
+            <span id="exportCount">0</span>
+          </button>
+          <div id="exportMenu" class="hidden export-menu">
+            <button onclick="exportResults('csv')">CSV</button>
+            <button onclick="exportResults('markdown')">Markdown</button>
+            <button onclick="exportResults('text')">Solo URL</button>
+          </div>
         </div>
+        <button class="icon-button selected-button" onclick="toggleSelectionMode()" title="Toggle selection mode" id="toggleSelectButton">
+          <span class="material-symbols-outlined">select</span>
+        </button>
+        <button class="icon-button" onclick="resetFilters()" title="Reset filtri" id="resetButton">
+          <span class="material-symbols-outlined">clear_all</span>
+        </button>
       </div>
-      <button class="icon-button selected-button" onclick="toggleSelectionMode()" title="Toggle selection mode" id="toggleSelectButton">
-        <span class="material-symbols-outlined">select</span>
-      </button>
     </div>
+    
     <!-- Menu visivo per filtro tag -->
     <div id="tagFilterMenu"></div>
     <div id="domainFilterMenu"></div>
@@ -574,6 +512,34 @@
       let selectedDomains = [];
       let selectedItems = new Set();
       let selectionMode = false;
+      
+      
+      window.addEventListener("load", () => {
+        document.getElementById("tagFilterMenu").classList.add("hidden");
+        document.getElementById("domainFilterMenu").classList.add("hidden");
+        
+        const saved = localStorage.getItem("savedCSV");
+        if (saved) {
+          data = JSON.parse(saved).map((item) => {
+            if (!item.tags || item.tags.trim() === "") {
+              item.tags = "uncategorized";
+            }
+            return item;
+          });
+          filtered = [...data];
+          onDataLoaded();
+          showNotification("Data loaded from browser.");
+        }
+        
+        updateCacheButtonState();
+        
+        document.getElementById("searchInput").addEventListener("keydown", function(event) {
+          if (event.key === "Enter") {
+            applyFilters();
+          }
+        });
+      });
+      
       window.onload = function() {
         const btn = document.getElementById('toggleSelectButton');
         btn.classList.remove('selected-button');
@@ -602,7 +568,9 @@
           });
         }
         updateExportCount();
-        showNotification(selectionMode ? "Selection mode ON" : "Selection mode OFF");
+        showNotification(
+          selectionMode ? "Selection mode ON" : "Selection mode OFF"
+        );
       }
 
       function showNotification(message) {
@@ -682,17 +650,17 @@
       function buildTagFilterMenu(tagCounts) {
         const container = document.getElementById("tagFilterMenu");
         container.innerHTML = "";
+        
         const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
-        if (sortedTags.length === 0) {
-          container.style.display = "none"; // nascondi se non ci sono tag
-          return;
-        } else {
-          container.style.display = ""; // torna allo stile CSS originale
-        }
+        
+        // Usa una classe per nascondere/mostrare
+        container.classList.toggle("hidden", sortedTags.length === 0);
+        
         sortedTags.forEach((tag) => {
           const label = document.createElement("label");
           label.style.marginRight = "0px";
           label.style.cursor = "pointer";
+          
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.value = tag;
@@ -706,8 +674,9 @@
             }
             applyFilters();
           });
+          
           label.appendChild(checkbox);
-          label.appendChild(document.createTextNode(` ${tag} (${tagCounts[tag]})`));
+          label.append(` ${tag} (${tagCounts[tag]})`);
           container.appendChild(label);
         });
       }
@@ -961,6 +930,7 @@
         }
         return tagColors[tag];
       }
+      
 
       function exportSelected() {
         const selectedData = filtered.filter((item) => selectedItems.has(item.url));
@@ -1085,13 +1055,18 @@
       function renderDomainFilter(domains, domainCounts) {
         const menu = document.getElementById("domainFilterMenu");
         menu.innerHTML = "";
-        // Crea un array di [domain, count]
+        
+        // Usa una classe per nascondere/mostrare
+        menu.classList.toggle("hidden", domains.length === 0);
+        
         const domainsWithCounts = domains.map(domain => [domain, domainCounts[domain] || 0]);
-        // Ordina decrescente per count
         domainsWithCounts.sort((a, b) => b[1] - a[1]);
-        // Renderizza i domini ordinati
+        
         domainsWithCounts.forEach(([domain, count]) => {
           const label = document.createElement("label");
+          label.style.cursor = "pointer";
+          label.style.display = "block";
+          
           const checkbox = document.createElement("input");
           checkbox.type = "checkbox";
           checkbox.value = domain;
@@ -1106,6 +1081,7 @@
             }
             applyFilters();
           });
+          
           label.appendChild(checkbox);
           label.append(` ${domain} (${count})`);
           menu.appendChild(label);
@@ -1123,6 +1099,40 @@
         const domainCounts = getDomainCounts(data);
         renderDomainFilter(domains, domainCounts);
         renderCards(data);
+        updateExportCount();
+      }
+      
+      function resetFilters() {
+        // 1) Annulla ricerca e date
+        document.getElementById('searchInput').value = '';
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        
+        // 2) Pulisci filtri tag e domini
+        selectedTags = [];
+        selectedDomains = [];
+        // deseleziona tutte le checkbox di tag/domini
+        document.querySelectorAll('#tagFilterMenu input[type="checkbox"], #domainFilterMenu input[type="checkbox"]')
+        .forEach(cb => cb.checked = false);
+        
+        // 3) Disattiva selection mode (e deseleziona eventuali card)
+        if (selectionMode) {
+          toggleSelectionMode(); // questo già pulisce selectedItems e toglie classi .selected
+        }
+        
+        // 4) Ripristina filtered a tutto il dataset
+        filtered = [...data];
+        
+        // 5) Ricostruisci menu e cards
+        const tagCounts = getTagCounts(filtered);
+        buildTagFilterMenu(tagCounts);
+        const domains = getUniqueDomains(filtered);
+        const domCounts = getDomainCounts(filtered);
+        renderDomainFilter(domains, domCounts);
+        renderCards(filtered);
+        
+        // 6) Notifica e aggiorna contatore
+        showNotification('Filtri resettati');
         updateExportCount();
       }
 
