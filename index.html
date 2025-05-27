@@ -435,6 +435,10 @@
           gap: 6px;
         }
         
+        #uploadCSVButton {
+          justify-content: flex-start;
+        }
+        
         #toggleSelectButton,
         #resetButton {
           width: 50px;
@@ -575,12 +579,13 @@
 
       function showNotification(message) {
         const note = document.getElementById("notification");
-        note.textContent = message;
+        note.innerHTML = message;  // uso innerHTML per interpretare le icone come HTML
         note.style.display = "block";
         setTimeout(() => {
           note.style.display = "none";
         }, 3000);
       }
+
 
       function updateCacheButtonState() {
         const button = document.getElementById("clearCacheButton");
@@ -687,40 +692,52 @@
         const end = new Date(document.getElementById("endDate").value);
         const q = document.getElementById("searchInput").value.toLowerCase();
         const selD = selectedDomains;
+        
         filtered = data.filter((item) => {
-          // testo & date
           const txtMatch = !q || (item.title && item.title.toLowerCase().includes(q)) || (item.excerpt && item.excerpt.toLowerCase().includes(q));
           const dt = new Date(item.created);
           const dateMatch = (isNaN(start) || dt >= start) && (isNaN(end) || dt <= end);
-          // tag
+          
           let tagMatch = true;
           if (selectedTags.length) {
             if (!item.tags) return false;
             const its = item.tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0);
             tagMatch = selectedTags.every((t) => its.includes(t));
           }
-          // domini
+          
           let domMatch = true;
           if (selD.length) {
             const dom = getDomain(item.url);
             domMatch = selD.includes(dom);
           }
+          
           return txtMatch && dateMatch && tagMatch && domMatch;
         });
+        
         // 2) Ricostruisci il menu TAG con i conteggi su filtered
         const newTagCounts = getTagCounts(filtered);
         buildTagFilterMenu(newTagCounts);
+        
         // 3) Ricostruisci il menu DOMINI (tutti i domini, ma conteggi su filtered)
         const allD = getUniqueDomains(filtered);
         const domCounts = getDomainCounts(filtered);
         renderDomainFilter(allD, domCounts);
+        
         // 4) Rendi visibili le card filtrate
         renderCards(filtered);
-        // 5) Notifica filtri attivi
+        
+        // 5) Notifica filtri attivi con icone più piccole e senza testo "Filtri →"
         let parts = [];
-        if (selectedTags.length) parts.push(`tag: ${selectedTags.join(", ")}`);
-        if (selectedDomains.length) parts.push(`domini: ${selectedDomains.join(", ")}`);
-        showNotification(parts.length ? `Filtri → ${parts.join(" | ")}` : "Nessun filtro attivo");
+        const iconStyle = "style='font-size:16px; vertical-align:bottom; margin-right:4px;'";
+        
+        if (selectedTags.length) {
+          parts.push(`<span class="material-symbols-outlined" ${iconStyle}>label</span>${selectedTags.join(", ")}`);
+        }
+        if (selectedDomains.length) {
+          parts.push(`<span class="material-symbols-outlined" ${iconStyle}>language</span>${selectedDomains.join(", ")}`);
+        }
+        showNotification(parts.length ? parts.join(" ") : "Nessun filtro attivo");
+        
         // 6) Aggiorna contatore export
         updateExportCount();
       }
