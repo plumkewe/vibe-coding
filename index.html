@@ -21,6 +21,10 @@
         margin: 0;
         padding: 20px;
         user-select: none;
+        -webkit-user-select: none;  /* Safari, Chrome */
+        -moz-user-select: none;     /* Firefox */
+        -ms-user-select: none;      /* IE10+ */
+        user-select: none;          /* Standard */
       }
       
       input,
@@ -189,7 +193,7 @@
       }
       
       .card.selected {
-        border-color: gray;
+        border-color: #fff; /* bordo bianco per selezione, uguale su desktop e mobile */
       }
       
       .badges-row {
@@ -370,28 +374,13 @@
         cursor: pointer;
       }
       
-      @media (hover: none) {
-        /* Disattiva effetti hover su tutti gli elementi interattivi */
-        button:hover,
-        .export-menu button:hover,
-        .icon-button:hover,
-        .card:hover,
-        #tagFilterMenu label:hover,
-        #domainFilterMenu label:hover {
-          background-color: initial !important;
-          color: inherit !important;
-          border-color: inherit !important;
-          box-shadow: none !important;
+      @media (hover: none) @media (hover: none) {
+        .card:hover {
           transform: none !important;
-          cursor: default !important;
+          box-shadow: none !important;
         }
         
-        /* Rimuove le transizioni che reagiscono al :hover */
-        button,
-        .icon-button,
-        .card,
-        #tagFilterMenu label,
-        #domainFilterMenu label {
+        .card {
           transition: none !important;
         }
       }
@@ -493,6 +482,7 @@
             <button onclick="exportResults('csv')">CSV</button>
             <button onclick="exportResults('markdown')">Markdown</button>
             <button onclick="exportResults('text')">Solo URL</button>
+            <button onclick="exportResults('archive')">Archive.is</button>
           </div>
         </div>
         <button class="icon-button selected-button" onclick="toggleSelectionMode()" title="Toggle selection mode" id="toggleSelectButton">
@@ -1005,11 +995,15 @@
       }
 
       function exportResults(type = "csv") {
-        const selectedData = selectionMode && selectedItems.size > 0 ? filtered.filter((item) => selectedItems.has(item.url)) : filtered;
+        const selectedData = selectionMode && selectedItems.size > 0
+        ? filtered.filter((item) => selectedItems.has(item.url))
+        : filtered;
+        
         if (selectedData.length === 0) {
           showNotification("Nessun elemento da esportare.");
           return;
         }
+        
         if (type === "csv") {
           const fileName = buildFileName();
           const csvContent = Papa.unparse(selectedData);
@@ -1021,17 +1015,32 @@
           link.click();
           document.body.removeChild(link);
         }
+        
         if (type === "markdown") {
           const md = selectedData.map((item) => `[${item.title}](${item.url})`).join("\n");
           copyToClipboard(md);
           showNotification("Markdown copiato negli appunti.");
         }
+        
         if (type === "text") {
           const urls = selectedData.map((item) => item.url).join("\n");
           copyToClipboard(urls);
           showNotification("Link copiati negli appunti.");
         }
-        // Close the export menu
+        
+        if (type === "archive") {
+          // Crea link per archive.is senza query string
+          const archiveLinks = selectedData.map(item => {
+            // Prende solo la parte prima del "?" nella URL
+            const baseUrl = item.url.split("?")[0];
+            return `[${item.title}](https://archive.is/latest/${baseUrl})`;
+          }).join("\n");
+          
+          copyToClipboard(archiveLinks);
+          showNotification("Link Archive.is copiati negli appunti.");
+        }
+        
+        // Chiude il menu esportazione
         const menu = document.getElementById("exportMenu");
         menu.classList.add("hidden");
         document.removeEventListener("click", handleOutsideClick);
