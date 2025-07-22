@@ -81,6 +81,11 @@ button:hover,
   border-radius: 4px;
 }
 
+.export-menu.left {
+  right: auto;
+  left: 0;
+}
+
 .hidden {
   display: none;
 }
@@ -97,7 +102,7 @@ button:hover,
 
 #controls {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
   gap: 8px;
@@ -270,6 +275,23 @@ button:hover,
   padding: 0 12px;
   border-radius: 4px;
 }
+
+#graphViewButton {
+  width: 50px;       /* stessa larghezza bottone select */
+  height: 42px;      /* stessa altezza */
+  flex-grow: 0;      /* non si espande */
+  flex-shrink: 0;    /* non si riduce */
+  padding: 0;        /* se vuoi togliere padding extra */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#graphViewButton .material-symbols-outlined {
+  font-size: 20px;   /* o la dimensione che va bene per il bottone */
+  line-height: 1;
+}
+
 
 #fileClearContainer {
   display: flex;
