@@ -1,0 +1,444 @@
+:root {
+  --bg-color: #000;
+  --text-color: #e0e0e0;
+  --card-bg: #111;
+  --accent: #00bcd4;
+  --border-color: #444;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 20px;
+  user-select: none;
+  -webkit-user-select: none;  /* Safari, Chrome */
+  -moz-user-select: none;     /* Firefox */
+  -ms-user-select: none;      /* IE10+ */
+  user-select: none;          /* Standard */
+}
+
+input,
+button,
+.icon-button {
+  background: #222;
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+  height: 42px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+button:hover,
+.export-menu button:hover,
+.icon-button:hover {
+  background-color: var(--accent);
+  color: #000;
+}
+
+.selected-button,
+.icon-button.selected-button {
+  background-color: var(--accent);
+  color: #000;
+}
+
+/* Container */
+.export-dropdown-container {
+  position: relative;
+}
+
+/* Export menu */
+.export-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+  min-width: 140px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.export-menu button {
+  background: transparent;
+  color: var(--text-color);
+  border: none;
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+#tagFilterMenu.hidden,
+#domainFilterMenu.hidden {
+  display: none;
+}
+
+#exportMenu {
+  position: absolute;
+  z-index: 999;
+}
+
+#controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+#date-range {
+  display: flex;
+  gap: 8px;
+  width: auto;
+}
+
+#date-range input {
+  width: auto;
+  min-width: 120px;
+}
+
+#exportSelectResetContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#cardsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  flex: 1 1 250px;
+  min-width: 250px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, width 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.card .image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  overflow: hidden;
+}
+
+.card .image-container img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  margin: 0;
+}
+
+.card-content {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-content h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.card-content p {
+  margin: 0;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.card.selected {
+  border-color: #fff; /* bordo bianco per selezione, uguale su desktop e mobile */
+}
+
+.badges-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  overflow: hidden;
+}
+
+.badge {
+  font-size: 12px;
+  color: #bbb;
+  background-color: #222;
+  border: 1px solid #333;
+  padding: 3px 6px;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  line-height: 1;
+  box-sizing: border-box;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.badge.date-badge {
+  white-space: nowrap;
+}
+
+.badge.source {
+  background-color: #555;
+  color: #ddd;
+  border-color: #777;
+  font-weight: 500;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: auto;
+  min-width: 42px;
+  user-select: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+#exportCount {
+  display: inline-block;
+  min-width: auto;
+  text-align: center;
+}
+
+#searchGoContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+#searchGoContainer input#searchInput {
+  flex-grow: 1;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+}
+
+#searchGoContainer button {
+  flex-shrink: 0;
+  width: 50px;
+  min-width: auto;
+  padding: 0 12px;
+  border-radius: 4px;
+}
+
+#fileClearContainer {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#fileClearContainer input#csvFile {
+  flex-grow: 1;
+  min-width: 0;
+  height: 42px;
+  box-sizing: border-box;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#fileClearContainer button#clearCacheButton {
+  flex-shrink: 0;
+  width: 50px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+#notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #222;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  display: none;
+  z-index: 1000;
+  border: 1px solid #444;
+}
+
+#tagFilterMenu,
+#domainFilterMenu {
+  margin: 10px 0 20px 0;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  font-size: 14px;
+  max-height: 120px;
+  overflow-y: auto;
+  border-radius: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#tagFilterMenu label,
+#domainFilterMenu label {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: #222;
+  border: 1px solid #444;
+  border-radius: 4px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  color: var(--text-color);
+  margin: 5px;
+}
+
+#tagFilterMenu label:hover,
+#domainFilterMenu label:hover {
+  background-color: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+
+#tagFilterMenu input[type="checkbox"],
+#domainFilterMenu input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+@media (hover: none) @media (hover: none) {
+  .card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  .card {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  #controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  input,
+  button,
+  .icon-button {
+    width: 100%;
+  }
+  
+  #date-range {
+    width: 100%;
+  }
+  
+  #fileClearContainer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: none;
+    gap: 8px;
+  }
+  
+  #fileClearContainer input#csvFile {
+    width: auto;
+    max-width: none;
+  }
+  
+  #exportSelectResetContainer > .export-dropdown-container {
+    flex-grow: 1;
+  }
+  
+  #exportSelectResetContainer > .export-dropdown-container > button.icon-button {
+    width: 100% !important;
+    min-width: 0 !important;
+    justify-content: flex-start; 
+    gap: 6px;
+  }
+  
+  #uploadCSVButton {
+    justify-content: flex-start;
+  }
+  
+  #toggleSelectButton,
+  #resetButton {
+    width: 50px;
+    flex-shrink: 0;
+  }
+  
+  #fileClearContainer button#clearCacheButton {
+    width: 50px;
+    flex-shrink: 0;
+  }
+  
+  #date-range input {
+    flex: 1 1 50%;
+    min-width: 0;
+  }
+  
+  .card {
+    width: 100%;
+    transition: none !important;
+  }
+}
